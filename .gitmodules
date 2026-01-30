@@ -4,3 +4,6 @@
 [submodule "frontend/src/FrontendDevelopmen"]
 	path = frontend/src/FrontendDevelopmen
 	url = https://github.com/ViN-09/SIGMATEL_frontend.git
+[submodule "frontend/src/FrontendScript"]
+	path = frontend/src/FrontendScript
+	url = https://github.com/ViN-09/SIGMATEL_frontend.git
