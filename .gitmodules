@@ -1,0 +1,6 @@
+[submodule "backend/app/Http/Controllers/ttc_paniki_controllers"]
+	path = backend/app/Http/Controllers/ttc_paniki_controllers
+	url = https://github.com/ViN-09/SIGMATEL_backend.git
+[submodule "frontend/src/FrontendDevelopmen"]
+	path = frontend/src/FrontendDevelopmen
+	url = https://github.com/ViN-09/SIGMATEL_frontend.git

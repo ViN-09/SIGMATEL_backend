@@ -1,0 +1,410 @@
+
+
+
+/* Animasi fade-in + slide */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+.submenu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.submenu-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #1d1d1b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submenu-list li:hover {
+  background-color: #e6001310;
+  color: #e60012;
+}
+
+.submenu-list i {
+  font-size: 1.2rem;
+  color: #e60012;
+}
+
+.division-selector{
+    padding: 0;
+}
+
+/* ---------- DIVISION SELECTOR & CARDS ---------- */
+.division-selector-warper {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #d3d1d1;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 20% 80%;
+}
+
+.division-selector-warper-dapot {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #d3d1d1;
+  height: 100%;
+  display: grid;
+}
+
+.selector-data-warper {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #d3d1d1;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: 10px;
+}
+.selector-data-warper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.selector-data-warper::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+
+.selector-data-warper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.division-selector-warper>h5 {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  padding-left: 15px;
+}
+
+.division-selector-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  padding: 10px;
+  height: 100%;
+}
+
+/* -For Dapot */
+.division-selector-menu-dapot {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 10px;
+  scrollbar-width: thin;
+  /* firefox */
+}
+
+/* scrollbar minimalis elegan */
+.division-selector-menu-dapot::-webkit-scrollbar {
+  height: 6px;
+  display: none;
+}
+
+.division-selector-menu-dapot::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  display: none;
+}
+
+.division-selector-menu-dapot::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* === CARD === */
+.division-card-dapot {
+  flex: 0 0 230px;
+  /* lebar tiap kartu */
+  scroll-snap-align: start;
+  background: var(--bg--primary, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  padding: 5px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+  backdrop-filter: blur(6px);
+  transform-origin: center bottom;
+  height: max-content;
+}
+
+/* efek hover & aktif */
+.division-card-dapot:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0);
+  border-color: var(--accent--primary, #e60012);
+}
+
+.division-card-dapot:active {
+  transform: scale(0.97);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.068);
+}
+
+/* === CARD AKTIF (jika pakai state activeCard) === */
+.division-card-dapot.active {
+  border: 2px solid var(--accent--primary, #e60012);
+  box-shadow: 0 12px 30px rgba(243, 85, 37, 0);
+}
+
+/* === LABEL === */
+.card-label-dapot {
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: capitalize;
+  color: var(--text--primary, #222);
+  margin-bottom: 5px;
+  letter-spacing: 0.3px;
+}
+
+/* === INFO === */
+.card-info-dapot {
+  font-size: 0.8rem;
+  color: var(--text--secondary, #666);
+  font-weight: 500;
+}
+
+/*  */
+
+.selector-data {
+  width: 100%;
+  overflow: auto;
+
+}
+
+.division-card {
+  background: #fff;
+  border: 1px solid #d3d1d1;
+  border-radius: 16px;
+  padding: 15px 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.division-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.division-card.active,
+li.active {
+  color: #e60012;
+}
+
+.card-label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.card-info {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.division-card.active .card-info {
+  color: #1d1d1b;
+}
+
+#headertable {
+  display: flex;
+  width: 100%;
+  padding-top: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
+  justify-content: space-between;
+}
+
+
+/* ---------- SIMAIN DASHBOARD SUB CONTENT ---------- */
+.simain-dashboard-sub-content1,
+.simain-dashboard-sub-content1-dapot,
+.simain-dashboard-sub-content2,
+#buku-tamu-warper {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  animation: fadeSlideUp 0.6s ease forwards;
+}
+
+#buku-tamu-warper {
+  padding: 15px;
+  width: 100%;
+}
+
+#buku-tamu {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #d3d1d1;
+  height: 100%;
+  max-height: 100%;
+  overflow: auto;
+  padding: 10px;
+
+  /* hide scrollbar untuk semua browser modern */
+  -ms-overflow-style: none;
+  /* IE & Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.simain-dashboard-containt.body {
+  width: 100%;
+  overflow: auto;
+}
+
+
+
+#buku-tamu::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+.simain-dashboard-sub-content2 {
+  padding: 15px;
+}
+
+.simain-dashboard-sub-content1 {
+  display: grid;
+  grid-template-rows: 30% 70%;
+}
+
+.simain-dashboard-sub-content1-dapot {
+  display: grid;
+  grid-template-rows: 18% 81%;
+  gap: 1%;
+}
+
+/* Delay biar tampil bergiliran */
+.simain-dashboard-sub-menu {
+  animation-delay: 0.1s;
+}
+
+.simain-dashboard-sub-content1 {
+  animation-delay: 0.3s;
+}
+
+.simain-dashboard-sub-content1-dapot {
+  animation-delay: 0.3s;
+}
+
+.simain-dashboard-sub-content2 {
+  animation-delay: 0.5s;
+}
+
+.simain-dashboard-sub-content2-warper {
+  background: #fff;
+  border: 1px solid #d3d1d1;
+  border-radius: 16px;
+  padding: 15px 20px;
+  height: 100%;
+  overflow: auto;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+/* Chrome, Edge, Safari */
+.simain-dashboard-sub-content2-warper::-webkit-scrollbar {
+  width: 2px;
+  /* super tipis */
+  height: 2px;
+}
+
+.simain-dashboard-sub-content2-warper::-webkit-scrollbar-track {
+  background: transparent;
+  /* track nggak keliatan */
+}
+
+.simain-dashboard-sub-content2-warper::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  /* sangat subtle */
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.simain-dashboard-sub-content2-warper::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  /* muncul lebih jelas saat hover */
+}
+
+/* === TABLE BASE === */
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 13px !important;
+  border-radius: 12px !important;
+  border: 1px solid #ddd !important;
+  background-color: #fff !important;
+  overflow: hidden !important;
+}
+
+/* === HEADER (THEAD) === */
+thead {
+  background-color: #f8f9fa !important; /* terang */
+  color: #000 !important; /* teks hitam 🔥 */
+  text-align: left !important;
+}
+
+th {
+  padding: 10px 12px !important;
+  text-transform: capitalize !important;
+  font-weight: 600 !important;
+  border-bottom: 2px solid #ddd !important;
+}
+
+/* === BODY (TBODY) === */
+td {
+  padding: 8px 12px !important;
+  border-bottom: 1px solid #ececec !important;
+  vertical-align: middle !important;
+  color: #333 !important;
+}
+
+/* === STRIPED ROWS === */
+tbody tr:nth-child(odd) {
+  background-color: #fafafa !important;
+}
+
+/* === HOVER EFFECT === */
+tbody tr:hover {
+  background-color: #f0f0f0 !important;
+  transition: background 0.15s ease !important;
+}
+
+/* === SMOOTH BORDER TOP ROUNDED === */
+thead tr:first-child th:first-child {
+  border-top-left-radius: 12px !important;
+}
+thead tr:first-child th:last-child {
+  border-top-right-radius: 12px !important;
+}

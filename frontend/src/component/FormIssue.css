@@ -1,0 +1,95 @@
+/* ================================
+   GLOBAL STYLE
+   ================================ */
+
+
+
+/* ================================
+   CARD FORM WRAPPER
+   ================================ */
+.tsel-card {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  border-left: 6px solid #e60023;  
+}
+
+/* ================================
+   TITLE
+   ================================ */
+.tsel-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #e60023;
+}
+
+/* ================================
+   LABEL
+   ================================ */
+.tsel-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  color: #333;
+}
+
+/* ================================
+   INPUT & TEXTAREA
+   ================================ */
+.tsel-input,
+.tsel-textarea,
+.tsel-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d1d1;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.25s ease;
+  background: #fdfdfd;
+}
+
+.tsel-input:focus,
+.tsel-textarea:focus,
+.tsel-select:focus {
+  outline: none;
+  border-color: #e60023;
+  box-shadow: 0 0 0 3px rgba(230, 0, 35, 0.15);
+}
+
+.tsel-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* ================================
+   BUTTON
+   ================================ */
+.tsel-btn {
+  background: #e60023;
+  color: white;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.tsel-btn:hover {
+  background: #cc001f;
+  box-shadow: 0 6px 14px rgba(230, 0, 35, 0.3);
+}
+
+.tsel-btn:active {
+  background: #b0001a;
+}
+
+/* ================================
+   SPACING
+   ================================ */
+.tsel-form-group {
+  margin-bottom: 18px;
+}

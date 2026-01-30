@@ -1,0 +1,118 @@
+.ceklist-content{
+    display: grid;
+    height: 100%;
+    grid-template-rows: 23% 76%;
+    gap: 1%;
+}
+
+.ceklist-menu-warper{
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: 100%;
+}
+
+.ceklist-content-eror{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-white);
+    border-radius: 16px;
+    padding: 20px;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    scroll-behavior: smooth;
+
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.ceklist-menu-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-white);
+    border-radius: 16px;
+    padding: 20px;
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    scroll-behavior: smooth;
+
+    /* Firefox scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.content-ceklist-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.add-ceklist-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-main);
+  color: var(--color-bg-white);          /* teks putih dari root */
+  background-color: var(--color-primary); /* accent utama dari root */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.add-ceklist-button:hover {
+  background-color: #cc0010;  /* versi gelap dari --color-primary, bisa juga buat variable baru */
+  transform: translateY(-1px);
+}
+
+.add-ceklist-button:active {
+  background-color: #a3000d;  /* warna saat ditekan */
+  transform: translateY(1px);
+}
+
+.add-ceklist-button i {
+  margin-right: 6px; /* jika pakai icon */
+}
+
+
+
+
+/* ===== SCROLLBAR MODERN CHROME/EDGE/Safari ===== */
+.ceklist-menu-content::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+}
+
+.ceklist-menu-content::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.ceklist-menu-content::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 8px;
+}
+
+.ceklist-menu-content::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* ================= TITLE ================= */
+#title-ceklist {
+    padding: 0;
+    margin: 0;
+    font-size: 20px;
+    text-align: left;
+}
+#title-ceklist{
+    padding: 0%;
+    margin: 0%;
+    font-size: 20px;
+}

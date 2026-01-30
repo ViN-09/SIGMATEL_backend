@@ -1,0 +1,104 @@
+.Motherparent {
+  width: "100%";
+  height: "100%";
+  display: "grid";
+  grid-template-rows: "100%";
+  grid-template-columns: "100%";
+  padding: "0px";
+  margin: "0";
+}
+
+:root {
+  /* ===== FONT ===== */
+  --font-brand: "Eras Bold ITC", sans-serif;
+  --font-main: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ===== COLOR ===== */
+  --color-bg-main: #e0e0e0;
+  --color-bg-white: #ffffff;
+
+  --color-primary: #e60012;
+  --color-primary-text: #272727;
+  --color-text-muted: #80807b;
+
+  --color-border: #ccc;
+  --color-hover: #f0f0f0;
+
+
+  --color-ceklist-daily-bg: #ffe6e9;
+  --color-ceklist-daily-text: #e60012;
+  --color-ceklist-weekly-bg: #eef2ff;
+  --color-ceklist-weekly-text: #2f5bea;
+
+  :root {
+    --scrollbar-width: 8px;
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+  }
+
+  /* ===== SCROLLBAR GLOBAL ===== */
+  /* ===== SCROLLBAR GLOBAL ===== */
+  * {
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  /* Webkit browsers (Chrome, Edge, Safari) */
+  *::-webkit-scrollbar {
+    width: var(--scrollbar-width, 8px);
+    /* default 8px jika variable tidak ada */
+    background: transparent;
+    /* hilangkan panah & track default */
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+    /* track transparan */
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    /* lebih transparan & elegan */
+    border-radius: 12px;
+    /* bulat halus */
+    transition: background 0.3s ease;
+    /* smooth hover */
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+    /* sedikit lebih gelap saat hover */
+  }
+
+  /* ===== OPSIONAL: Scrollbar hanya muncul saat hover ===== */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 0px;
+    /* sembunyikan default */
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  *:hover::-webkit-scrollbar {
+    width: var(--scrollbar-width, 8px);
+  }
+
+}
+
+@media (max-width: 1910px) {
+  .Motherparent {
+    zoom: 0.78;
+  }
+}
+
+
+
+
