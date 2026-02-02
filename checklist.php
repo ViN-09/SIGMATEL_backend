@@ -1,5 +1,5 @@
 <?php
-
+//test adjie 1
 namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use App\Http\Controllers\Controller;
