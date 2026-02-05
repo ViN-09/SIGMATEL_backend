@@ -1,1 +1,1 @@
-test manda
+test dika
