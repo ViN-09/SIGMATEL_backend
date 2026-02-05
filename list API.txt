@@ -4,3 +4,5 @@ https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestT
 https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/staffform
 https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/power
 https://azure-beaver-930369.hostingersite.com/api/user/stafflist/ttc_teling/ME
+
+//test manda
