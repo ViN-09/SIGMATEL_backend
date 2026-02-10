@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use Illuminate\Http\Request;
@@ -15,8 +14,7 @@ class VisitorsController extends Controller
     {
         try {
             $data = DB::table('visitors')->get();
-            
-            // Mengubah format respons sesuai dengan yang diinginkan
+
             return response()->json([
                 'success' => true,
                 'message' => 'List of visitors waiting for approval',
@@ -46,13 +44,16 @@ class VisitorsController extends Controller
                 'visit_id' => 'required|string',
                 'activity' => 'required|string',
                 'status' => 'required|string',
-                'signature' => 'nullable|mimes:jpeg,png,jpg,gif,svg|max:2048', 
+                'signature' => 'nullable|string', // Pastikan signature adalah base64 string
             ]);
 
             // Menyimpan file signature jika ada
             $signaturePath = null;
-            if ($request->hasFile('signature')) {
-                $signaturePath = $request->file('signature')->store('signatures', 'public');
+            if ($request->signature) {
+                // Decode base64 string
+                $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->signature));
+                $signaturePath = 'signatures/' . uniqid() . '.png';
+                Storage::disk('public')->put($signaturePath, $signatureData);
             }
 
             // Menyimpan data visitor ke dalam tabel visitors
