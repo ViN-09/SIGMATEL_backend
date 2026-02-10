@@ -6,11 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
 
 class VisitorsController extends Controller
 {
-    
+    // Menampilkan daftar pengunjung
     public function getVisitors()
     {
         try {
@@ -21,7 +21,7 @@ class VisitorsController extends Controller
                 'success' => true,
                 'message' => 'List of visitors waiting for approval',
                 'data' => $data
-            ]); 
+            ]);
         } catch (\Exception $e) {
             Log::error("Error getVisitors: " . $e->getMessage());
             return response()->json([
@@ -32,6 +32,7 @@ class VisitorsController extends Controller
         }
     }
 
+    // Menambah pengunjung baru
     public function addVisitor(Request $request)
     {
         try {
@@ -69,7 +70,6 @@ class VisitorsController extends Controller
                 'signature' => $signaturePath,
             ]);
 
-            // Menambahkan respons yang sesuai dengan format API
             return response()->json([
                 'success' => true,
                 'message' => 'Visitor added successfully'
