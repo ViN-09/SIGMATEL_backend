@@ -16,7 +16,7 @@ class VisitorsController extends Controller
     protected string $connection = 'mysql2';
 
     // tabel khusus paniki
-    protected string $table = 'visitors_paniki';
+    protected string $table = 'visitors';
 
     public function index()
     {
