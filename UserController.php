@@ -37,4 +37,21 @@ class UserController extends Controller
             ]
         ]);
     }
+
+    public function staffList($jabatan)
+{
+    $staff = DB::table('user_bio')
+        ->where('jabatan', $jabatan)
+        ->orderBy('Nama', 'asc')
+        ->get(['id', 'Nama'])
+        ->toArray();
+
+    array_unshift($staff, [
+        "id" => "-",
+        "Nama" => "-"
+    ]);
+
+    return response()->json($staff);
+}
+
 }

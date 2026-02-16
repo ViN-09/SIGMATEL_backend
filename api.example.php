@@ -43,4 +43,6 @@ Route::prefix('ttc_paniki')->group(function () {
     Route::prefix('user')->group(function () {
     Route::get('/{id}', [UserController::class, 'show']);
     });
+
+    Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
 });
