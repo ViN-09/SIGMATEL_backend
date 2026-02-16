@@ -12,7 +12,10 @@ use Carbon\Carbon;
 
 class VisitorsController extends Controller
 {
+    // koneksi DB khusus paniki (config/database.php)
     protected string $connection = 'mysql2';
+
+    // tabel khusus paniki
     protected string $table = 'visitors_paniki';
 
     public function index()
@@ -24,21 +27,7 @@ class VisitorsController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $data,
-        ], 200);
-    }
-
-    public function waiting()
-    {
-        $data = DB::connection($this->connection)
-            ->table($this->table)
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
+            'data' => $data
         ], 200);
     }
 
@@ -54,14 +43,15 @@ class VisitorsController extends Controller
                 ], 400);
             }
 
+            // Validasi sesuai React payload
             $validator = Validator::make($data, [
-                'name'      => 'required|string|max:255',
-                'company'   => 'required|string|max:255',
-                'phone'     => 'required|string|max:50',
-                'idType'    => 'required|string|max:50',
-                'idNumber'  => 'required|string|max:100',
-                'visitId'   => 'required|string|max:100',
-                'activity'  => 'required|string',
+                'name' => 'required|string|max:255',
+                'company' => 'required|string|max:255',
+                'phone' => 'required|string|max:50',
+                'idType' => 'required|string|max:50',
+                'idNumber' => 'required|string|max:100',
+                'visitId' => 'required|string|max:100',
+                'activity' => 'required|string',
                 'workspace' => 'required|string|max:20',
                 'signature' => 'required|string',
             ]);
@@ -70,19 +60,20 @@ class VisitorsController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors'  => $validator->errors(),
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
-            $signatureData = (string) $data['signature'];
+            // proses signature (base64 png dari canvas)
+            $signatureData = $data['signature'];
             $signatureData = preg_replace('#^data:image/\w+;base64,#i', '', $signatureData);
             $signatureData = str_replace(' ', '+', $signatureData);
 
-            $decoded = base64_decode($signatureData, true); // strict
+            $decoded = base64_decode($signatureData);
             if ($decoded === false) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Signature invalid (base64 decode failed)',
+                    'message' => 'Signature invalid',
                 ], 400);
             }
 
@@ -92,43 +83,25 @@ class VisitorsController extends Controller
             $now = Carbon::now();
 
             $insertData = [
-                'name'            => $data['name'],
-                'company'         => $data['company'],
-                'phone'           => $data['phone'],
-                'id_type'         => $data['idType'],
-                'id_number'       => $data['idNumber'],
-                'visit_id'        => $data['visitId'],
-                'activity'        => $data['activity'],
-                'ruang_kerja'     => $data['workspace'],
-                'signature'       => $signatureName,
-                'status'          => 'pending',
-                'dokumentasi_in'  => null,
-                'dokumentasi_out' => null,
-                'created_at'      => $now,
-                'updated_at'      => $now,
+                'name' => $data['name'],
+                'company' => $data['company'],
+                'phone' => $data['phone'],
+                'id_type' => $data['idType'],
+                'id_number' => $data['idNumber'],
+                'visit_id' => $data['visitId'],
+                'activity' => $data['activity'],
+                'ruang_kerja' => $data['workspace'],
+                'signature' => $signatureName,
+                'status' => 'pending',
+                'dokumentasi_in' => '',
+                'dokumentasi_out' => '',
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
 
-            $conn = DB::connection($this->connection);
-
-            try {
-                $id = $conn->table($this->table)->insertGetId($insertData);
-            } catch (\Throwable $e) {
-                Log::warning('insertGetId failed, fallback manual id: ' . $e->getMessage());
-
-                $id = $conn->transaction(function () use ($conn, $insertData) {
-                    $conn->statement("LOCK TABLES {$this->table} WRITE");
-                    try {
-                        $lastId = $conn->table($this->table)->max('id');
-                        $newId = ((int) ($lastId ?? 0)) + 1;
-
-                        $conn->table($this->table)->insert(array_merge(['id' => $newId], $insertData));
-
-                        return $newId;
-                    } finally {
-                        $conn->statement("UNLOCK TABLES");
-                    }
-                });
-            }
+            $id = DB::connection($this->connection)
+                ->table($this->table)
+                ->insertGetId($insertData);
 
             return response()->json([
                 'success' => true,
@@ -142,7 +115,7 @@ class VisitorsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Server error',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -150,9 +123,11 @@ class VisitorsController extends Controller
     public function updateStatus(Request $request, $id)
     {
         try {
-            $conn = DB::connection($this->connection);
+            $visitor = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
 
-            $visitor = $conn->table($this->table)->where('id', $id)->first();
             if (!$visitor) {
                 return response()->json([
                     'success' => false,
@@ -177,12 +152,14 @@ class VisitorsController extends Controller
             }
 
             $update = [
-                'status'     => $status,
+                'status' => $status,
                 'updated_at' => Carbon::now(),
             ];
 
+            // upload dokumentasi_in/out (opsional)
             if ($request->hasFile('dokumentasi_in')) {
                 $file = $request->file('dokumentasi_in');
+
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -197,6 +174,7 @@ class VisitorsController extends Controller
 
             if ($request->hasFile('dokumentasi_out')) {
                 $file = $request->file('dokumentasi_out');
+
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -209,12 +187,15 @@ class VisitorsController extends Controller
                 $update['dokumentasi_out'] = $filename;
             }
 
-            $conn->table($this->table)->where('id', $id)->update($update);
+            DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->update($update);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Status berhasil diupdate',
-                'data'    => $update,
+                'data' => $update,
             ], 200);
 
         } catch (\Exception $e) {
@@ -223,7 +204,7 @@ class VisitorsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Server error',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

@@ -33,20 +33,18 @@ Route::prefix('ttc_paniki')->group(function () {
         Route::get('/data_report/{type}/{startDate?}/{endDate?}', [SummaryPuePaniki::class, 'tableReportList']);
     });
 
+    // Visitors
+    Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
+    Route::get('/visitor', [VisitorsController::class, 'index']);
+    Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
+    Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+
     
-    Route::prefix('visitors')->group(function () {
-        
-        Route::get('/', [VisitorsController::class, 'getVisitors']);
-
-        
-        Route::post('/add', [VisitorsController::class, 'addVisitor']);
-    });
-
     Route::prefix('user')->group(function () {
-    Route::get('/{id}', [UserController::class, 'show']);
+        Route::get('/{id}', [UserController::class, 'show']);
     });
 
-    Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
+        Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
 
-    Route::get('/profiles', [ProfileController::class, 'profiles']);
+        Route::get('/profiles', [ProfileController::class, 'profiles']);
 });
