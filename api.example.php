@@ -12,6 +12,8 @@ use App\Http\Controllers\ttc_paniki_controllers\checklist as CheckListPaniki2;
 use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\VisitorsController; // Import VisitorsController
 use App\Http\Controllers\ttc_paniki_controllers\UserController;
+use App\Http\Controllers\ttc_paniki_controllers\ProfileController;
+
 
 
 /////////////////////////////////////////////////////////////////////////////Paniki/////////////////////////////////////////////////////////////////////////////////////////
@@ -45,4 +47,6 @@ Route::prefix('ttc_paniki')->group(function () {
     });
 
     Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
+
+    Route::get('/profiles', [ProfileController::class, 'profiles']);
 });
