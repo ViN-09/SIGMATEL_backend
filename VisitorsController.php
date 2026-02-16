@@ -12,14 +12,39 @@ use Carbon\Carbon;
 
 class VisitorsController extends Controller
 {
-    protected $connection = 'mysql';
+    protected string $connection = 'mysql2';
+    protected string $table = 'visitors_paniki';
+
+    public function index()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    }
+
+    public function waiting()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    }
 
     public function registvisitor(Request $request)
     {
         try {
-            // ============================
-            // AMBIL DATA JSON SECARA PAKSA
-            // ============================
             $data = $request->json()->all();
 
             if (empty($data)) {
@@ -29,18 +54,15 @@ class VisitorsController extends Controller
                 ], 400);
             }
 
-            // ============================
-            // VALIDASI
-            // ============================
             $validator = Validator::make($data, [
                 'name'      => 'required|string|max:255',
                 'company'   => 'required|string|max:255',
-                'phone'     => 'required|string|max:20',
+                'phone'     => 'required|string|max:50',
                 'idType'    => 'required|string|max:50',
                 'idNumber'  => 'required|string|max:100',
-                'visitId'   => 'required|string|max:50',
+                'visitId'   => 'required|string|max:100',
                 'activity'  => 'required|string',
-                'workspace' => 'required|string|max:255',
+                'workspace' => 'required|string|max:20',
                 'signature' => 'required|string',
             ]);
 
@@ -52,68 +74,66 @@ class VisitorsController extends Controller
                 ], 422);
             }
 
-            // ============================
-            // PROSES SIGNATURE BASE64
-            // ============================
-            $signatureData = str_replace('data:image/png;base64,', '', $data['signature']);
+            $signatureData = (string) $data['signature'];
+            $signatureData = preg_replace('#^data:image/\w+;base64,#i', '', $signatureData);
             $signatureData = str_replace(' ', '+', $signatureData);
-            $decoded = base64_decode($signatureData);
 
+            $decoded = base64_decode($signatureData, true); // strict
             if ($decoded === false) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Signature invalid',
+                    'message' => 'Signature invalid (base64 decode failed)',
                 ], 400);
             }
 
             $signatureName = 'signature_' . time() . '.png';
             Storage::disk('public')->put('signatures/' . $signatureName, $decoded);
 
-            // ============================
-            // INSERT DATABASE
-            // ============================
             $now = Carbon::now();
 
-            $id = DB::connection($this->connection)
-                ->table('visitors')
-                ->insertGetId([
-                    'name'            => $data['name'],
-                    'company'         => $data['company'],
-                    'phone'           => $data['phone'],
-                    'id_type'         => $data['idType'],
-                    'id_number'       => $data['idNumber'],
-                    'visit_id'        => $data['visitId'],
-                    'activity'        => $data['activity'],
-                    'ruang_kerja'     => $data['workspace'],
-                    'signature'       => $signatureName,
-                    'status'          => 'pending',
+            $insertData = [
+                'name'            => $data['name'],
+                'company'         => $data['company'],
+                'phone'           => $data['phone'],
+                'id_type'         => $data['idType'],
+                'id_number'       => $data['idNumber'],
+                'visit_id'        => $data['visitId'],
+                'activity'        => $data['activity'],
+                'ruang_kerja'     => $data['workspace'],
+                'signature'       => $signatureName,
+                'status'          => 'pending',
+                'dokumentasi_in'  => null,
+                'dokumentasi_out' => null,
+                'created_at'      => $now,
+                'updated_at'      => $now,
+            ];
 
-                    // ✅ FIX: biar gak error "doesn't have default value"
-                    'dokumentasi_in'  => null,
-                    'dokumentasi_out' => null,
+            $conn = DB::connection($this->connection);
 
-                    'created_at'      => $now,
-                    'updated_at'      => $now,
-                ]);
+            try {
+                $id = $conn->table($this->table)->insertGetId($insertData);
+            } catch (\Throwable $e) {
+                Log::warning('insertGetId failed, fallback manual id: ' . $e->getMessage());
+
+                $id = $conn->transaction(function () use ($conn, $insertData) {
+                    $conn->statement("LOCK TABLES {$this->table} WRITE");
+                    try {
+                        $lastId = $conn->table($this->table)->max('id');
+                        $newId = ((int) ($lastId ?? 0)) + 1;
+
+                        $conn->table($this->table)->insert(array_merge(['id' => $newId], $insertData));
+
+                        return $newId;
+                    } finally {
+                        $conn->statement("UNLOCK TABLES");
+                    }
+                });
+            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Visitor registered successfully',
-                'data' => [
-                    'id'              => $id,
-                    'name'            => $data['name'],
-                    'company'         => $data['company'],
-                    'phone'           => $data['phone'],
-                    'id_type'         => $data['idType'],
-                    'id_number'       => $data['idNumber'],
-                    'visit_id'        => $data['visitId'],
-                    'activity'        => $data['activity'],
-                    'ruang_kerja'     => $data['workspace'],
-                    'signature'       => $signatureName,
-                    'status'          => 'pending',
-                    'dokumentasi_in'  => null,
-                    'dokumentasi_out' => null,
-                ]
+                'data' => array_merge(['id' => $id], $insertData),
             ], 201);
 
         } catch (\Exception $e) {
@@ -127,22 +147,12 @@ class VisitorsController extends Controller
         }
     }
 
-    /**
-     * Update status + upload dokumentasi IN/OUT
-     * Endpoint: POST /api/ttc_paniki/visitors/{id}/update-status
-     * Body: multipart/form-data
-     * - status: approved | selesai | rejected
-     * - dokumentasi_in: (file) optional
-     * - dokumentasi_out: (file) optional
-     */
     public function updateStatus(Request $request, $id)
     {
         try {
-            $visitor = DB::connection($this->connection)
-                ->table('visitors')
-                ->where('id', $id)
-                ->first();
+            $conn = DB::connection($this->connection);
 
+            $visitor = $conn->table($this->table)->where('id', $id)->first();
             if (!$visitor) {
                 return response()->json([
                     'success' => false,
@@ -151,7 +161,6 @@ class VisitorsController extends Controller
             }
 
             $status = $request->input('status');
-
             if (!$status) {
                 return response()->json([
                     'success' => false,
@@ -159,7 +168,6 @@ class VisitorsController extends Controller
                 ], 422);
             }
 
-            // status yang diizinkan (silakan sesuaikan)
             $allowed = ['approved', 'selesai', 'rejected', 'pending'];
             if (!in_array($status, $allowed, true)) {
                 return response()->json([
@@ -173,10 +181,8 @@ class VisitorsController extends Controller
                 'updated_at' => Carbon::now(),
             ];
 
-            // ✅ FIX: key harus "dokumentasi_in"
             if ($request->hasFile('dokumentasi_in')) {
                 $file = $request->file('dokumentasi_in');
-
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -189,10 +195,8 @@ class VisitorsController extends Controller
                 $update['dokumentasi_in'] = $filename;
             }
 
-            // ✅ FIX: key harus "dokumentasi_out"
             if ($request->hasFile('dokumentasi_out')) {
                 $file = $request->file('dokumentasi_out');
-
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -205,10 +209,7 @@ class VisitorsController extends Controller
                 $update['dokumentasi_out'] = $filename;
             }
 
-            DB::connection($this->connection)
-                ->table('visitors')
-                ->where('id', $id)
-                ->update($update);
+            $conn->table($this->table)->where('id', $id)->update($update);
 
             return response()->json([
                 'success' => true,
