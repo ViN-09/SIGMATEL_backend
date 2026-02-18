@@ -11,8 +11,8 @@ use App\Http\Controllers\ttc_paniki_controllers\data_potensi as DataPotensi2Pani
 use App\Http\Controllers\ttc_paniki_controllers\checklist as CheckListPaniki2;
 use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\VisitorsController; // Import VisitorsController
+use App\Http\Controllers\ttc_paniki_controllers\ProfilesController as PanikiProfilesController;
 use App\Http\Controllers\ttc_paniki_controllers\UserController;
-use App\Http\Controllers\ttc_paniki_controllers\ProfileController;
 
 
 
@@ -42,11 +42,12 @@ Route::prefix('ttc_paniki')->group(function () {
         Route::post('/add', [VisitorsController::class, 'addVisitor']);
     });
 
-    Route::prefix('user')->group(function () {
-    Route::get('/{id}', [UserController::class, 'show']);
-    });
+    Route::get('profiles', [PanikiProfilesController::class, 'profiles']);
+});
 
-    Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
+Route::prefix('user')->group(function () {
 
-    Route::get('/profiles', [ProfileController::class, 'profiles']);
+    Route::get('{id}', [UserController::class, 'show']);
+
+    Route::get('stafflist/{site}/{jabatan}', [UserController::class, 'staffList']);
 });
