@@ -12,7 +12,7 @@ use App\Http\Controllers\ttc_paniki_controllers\checklist as CheckListPaniki2;
 use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\VisitorsController; // Import VisitorsController
 use App\Http\Controllers\ttc_paniki_controllers\UserController;
-use App\Http\Controllers\ttc_paniki_controllers\ProfileController;
+use App\Http\Controllers\ttc_paniki_controllers\ProfilesController;
 use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
 
 
@@ -47,7 +47,7 @@ Route::prefix('ttc_paniki')->group(function () {
 
         Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
 
-        Route::get('/profiles', [ProfileController::class, 'profiles']);
+        Route::get('/profiles', [ProfilesController::class, 'profiles']);
 
     Route::get(
     '/checklist2/requestTableStructure/{form}',

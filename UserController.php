@@ -44,40 +44,32 @@ class UserController extends Controller
 
     }
 
-    public function staffList($site,$jabatan)
-    {
+    public function staffList($jabatan)
+{
+    $jabatan = strtoupper(trim($jabatan));
 
-        $jabatan = strtoupper(trim($jabatan));
+    $staff = DB::connection('db_user')
+        ->table('user_bio')
+        ->whereRaw("UPPER(jabatan) LIKE ?", ["%$jabatan%"])
+        ->whereRaw("LOWER(site) LIKE '%paniki%'")
+        ->orderBy('Nama', 'asc')
+        ->get(['id', 'Nama']);
 
+    $result = [];
 
-        $staff = DB::connection('db_user')
-            ->table('user_bio')
-            ->whereRaw("UPPER(jabatan) LIKE ?",["%$jabatan%"])
-            ->whereRaw("LOWER(site) LIKE '%paniki%'")
-            ->orderBy('Nama','asc')
-            ->get(['id','Nama']);
-
-
-        $result=[];
-
-        foreach($staff as $s){
-
-            $result[]=[
-                "id"=>$s->id,
-                "Nama"=>$s->Nama
-            ];
-
-        }
-
-
-        array_unshift($result,[
-            "id"=>"-",
-            "Nama"=>"-"
-        ]);
-
-
-        return response()->json($result);
-
+    foreach ($staff as $s) {
+        $result[] = [
+            "id" => $s->id,
+            "Nama" => $s->Nama
+        ];
     }
+
+    array_unshift($result, [
+        "id" => "-",
+        "Nama" => "-"
+    ]);
+
+    return response()->json($result);
+}
 
 }
