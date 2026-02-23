@@ -9,7 +9,6 @@ class RequestTableStructureController extends Controller
 {
     public function requestTableStructure($form)
     {
-        // ================= STAFF FORM (TIDAK DIUBAH SAMA SEKALI) =================
         $tableName = 'report_info';
 
         $latest = DB::table($tableName)
@@ -49,11 +48,8 @@ class RequestTableStructureController extends Controller
             ]);
         }
 
-        // ================= POWER FORM (DITAMBAHKAN) =================
-
         if ($form == 'power') {
 
-            // ---- report_lvmdp1 ----
             $lvmdp1_latest = DB::table('report_lvmdp1')
                                 ->orderBy('id_report_lvmdp1', 'desc')
                                 ->first();
@@ -85,7 +81,6 @@ class RequestTableStructureController extends Controller
                 ];
             }
 
-            // ---- report_lvmdp2 ----
             $lvmdp2_latest = DB::table('report_lvmdp2')
                                 ->orderBy('id_report_lvmdp2', 'desc')
                                 ->first();
@@ -117,7 +112,6 @@ class RequestTableStructureController extends Controller
                 ];
             }
 
-            // ---- load_trafo ----
             $trafo_latest = DB::table('load_trafo')
                                 ->orderBy('id', 'desc')
                                 ->first();
@@ -155,6 +149,44 @@ class RequestTableStructureController extends Controller
                 "load_trafo"    => $load_trafo
             ]);
         }
+
+if ($form == 'property') {
+
+    $latest = DB::table('trafof_c')
+            ->orderBy('id', 'desc')
+            ->first();
+
+$columns = DB::select("SHOW COLUMNS FROM trafof_c");
+
+    $trafoc_c = [];
+
+    foreach ($columns as $column) {
+
+        $field = $column->Field;
+
+        if ($field == 'id') {
+            continue;
+        }
+
+        $type = strtoupper(strtok($column->Type, '('));
+
+        $latestValue = "-";
+
+        if ($latest && isset($latest->$field)) {
+            $latestValue = $latest->$field ?? "-";
+        }
+
+        $trafoc_c[] = [
+            "Field" => $field,
+            "Type" => $type,
+            "latestValue" => $latestValue
+        ];
+    }
+
+    return response()->json([
+        "trafoc_c" => $trafoc_c
+    ]);
+}
 
         return response()->json([
             "message" => "Form not found"
