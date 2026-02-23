@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class ProfileController extends Controller
+class ProfilesController extends Controller
 {
     protected $connection = 'mysql2';
 
@@ -64,23 +64,110 @@ class ProfileController extends Controller
         $rows = $this->safeGet('dp_pac');
         if ($rows->count() < 1) return null;
 
-        $totalKW = 0;
+        $upFlow = [];
+        $downFlow = [];
+        $inrow = [];
+
+        $totalKapasitas = 0;
+        $upper10 = 0;
+        $under10 = 0;
+
         foreach ($rows as $r) {
-            $kw = $r->kw ?? 0;
-            $kw = is_numeric($kw) ? (float)$kw : 0;
-            $totalKW += $kw;
+
+            $kw = is_numeric($r->kw ?? null) ? (float)$r->kw : 0;
+            $totalKapasitas += $kw;
+
+            $flow = strtolower(trim($r->flow_type ?? ''));
+
+            $flow = str_replace(['-','_'],' ',$flow);
+
+            $acLabel = ($r->brand ?? "AC") . "(" . $kw . " KW)";
+
+
+            if (strpos($flow,'up') !== false) {
+
+                $upFlow[] = $acLabel;
+
+            }
+            elseif (strpos($flow,'down') !== false) {
+
+                $downFlow[] = $acLabel;
+
+            }
+            elseif (
+                strpos($flow,'row') !== false
+                || strpos($flow,'inrow') !== false
+                || strpos($flow,'front') !== false
+            ) {
+
+                $inrow[] = $acLabel;
+
+            }
+
+
+            if (!empty($r->installed)) {
+
+                $year = (int) substr($r->installed,0,4);
+
+                if ($year > 0) {
+
+                    $age = date('Y') - $year;
+
+                    if ($age >= 10)
+                        $upper10++;
+                    else
+                        $under10++;
+                }
+            }
         }
 
+
+        $totalLoad = round($totalKapasitas * 0.78);
+
+        $occupancy = 0;
+
+        if ($totalKapasitas > 0) {
+            $occupancy = round(($totalLoad / $totalKapasitas) * 100,2);
+        }
+
+
         return [
-            "total_unit" => (int) $rows->count(),
-            "total_kw" => round($totalKW, 2),
-            "brand" => $rows[0]->brand ?? null,
-            "vendor_project" => $rows[0]->vendor_project ?? null,
-            "vendor_maintenance" => $rows[0]->vendor_maintenance ?? null,
-            "address" => $rows[0]->address ?? null,
+
+            "FlowType" => [
+
+                "up_flow" => [
+                    "jumlah" => count($upFlow),
+                    "ac" => $upFlow
+                ],
+
+                "down_flow" => [
+                    "jumlah" => count($downFlow),
+                    "ac" => $downFlow
+                ],
+
+                "inrow" => [
+                    "jumlah" => count($inrow)
+                ]
+
+            ],
+
+            "total_kapasitas" => (int)$totalKapasitas,
+
+            "setpoint" => "22 - 25",
+
+            "total_load" => (int)$totalLoad,
+
+            "age" => [
+                "upper10" => $upper10,
+                "under10" => $under10
+            ],
+
+            "occupancy" => $occupancy,
+
+            "total_pac" => $rows->count()
+
         ];
     }
-
     private function getUPSProfile()
     {
         $rows = $this->safeGet('dp_ups');
@@ -91,90 +178,123 @@ class ProfileController extends Controller
         $totalBank = 0;
         $totalAh = 0;
         $totalBatteryCap = 0;
+        $totalBatteryQty = 0;
+        $totalNE = 0;
 
         foreach ($rows as $r) {
-            $cap = $r->capacity_ups_kva ?? 0;
-            $cap = is_numeric($cap) ? (float)$cap : 0;
-            $totalCapacity += $cap;
 
-            $load = $r->total_load ?? 0;
-            $load = is_numeric($load) ? (float)$load : 0;
-            $totalLoad += $load;
+            $totalCapacity += is_numeric($r->capacity_ups_kva ?? null)
+                ? (float)$r->capacity_ups_kva : 0;
 
-            $bank = $r->total_bank ?? 0;
-            $bank = is_numeric($bank) ? (float)$bank : 0;
-            $totalBank += $bank;
+            $totalLoad += is_numeric($r->load_ups_kva ?? null)
+                ? (float)$r->load_ups_kva : 0;
 
-            $ah = $r->total_ah ?? 0;
-            $ah = is_numeric($ah) ? (float)$ah : 0;
-            $totalAh += $ah;
+            $totalBank += is_numeric($r->total_bank ?? null)
+                ? (float)$r->total_bank : 0;
 
-            $batcap = $r->total_battery_cap ?? 0;
-            $batcap = is_numeric($batcap) ? (float)$batcap : 0;
-            $totalBatteryCap += $batcap;
+            $totalAh += is_numeric($r->ah ?? null)
+                ? (float)$r->ah : 0;
+
+            $totalBatteryCap += is_numeric($r->battery_cap ?? null)
+                ? (float)$r->battery_cap : 0;
+
+            $totalBatteryQty += is_numeric($r->qt_battery ?? null)
+                ? (float)$r->qt_battery : 0;
+
+            $totalNE += is_numeric($r->jumlah_ne ?? null)
+                ? (float)$r->jumlah_ne : 0;
         }
 
         $occupancy = 0;
+
         if ($totalCapacity > 0) {
-            $occupancy = ($totalLoad / $totalCapacity) * 100;
+            $occupancy = round(($totalLoad / $totalCapacity) * 100,2);
         }
 
+
         return [
-            "total_capacity" => round($totalCapacity, 2),
-            "total_load" => round($totalLoad, 2),
-            "total_bank" => (int) $totalBank,
-            "total_ah" => round($totalAh, 2),
-            "total_battery_cap" => round($totalBatteryCap, 2),
-            "occupancy" => round($occupancy, 2),
-            "total_ne" => (int) $rows->count(),
-            "total_system" => (int) $rows->count(),
+
+            "total_capacity" => round($totalCapacity,2),
+
+            "total_load" => round($totalLoad,2),
+
+            "total_bank" => (int)$totalBank,
+
+            "total_ah" => round($totalAh,2),
+
+            "total_battery_cap" => round($totalBatteryCap,2),
+
+            "qt_battery" => (int)$totalBatteryQty,
+
+            "occupancy" => $occupancy,
+
+            "total_ne" => (int)$totalNE,
+
+            "total_system" => $rows->count()
+
         ];
     }
 
-    private function getRECTProfile()
-    {
-        $rows = $this->safeGet('dp_rectifier');
-        if ($rows->count() < 1) return null;
+private function getRECTProfile()
+{
+    $rows = $this->safeGet('dp_rectifier');
+    if ($rows->count() < 1) return null;
 
-        $totalCapacity = 0;
-        $totalLoad = 0;
-        $totalBank = 0;
-        $totalAh = 0;
+    $totalCapacity = 0;
+    $totalLoad = 0;
+    $totalBank = 0;
+    $totalAh = 0;
+    $totalBatteryCap = 0;
+    $totalNE = 0;
 
-        foreach ($rows as $r) {
-            $cap = $r->rec_capacity ?? 0;
-            $cap = is_numeric($cap) ? (float)$cap : 0;
-            $totalCapacity += $cap;
+    foreach ($rows as $r) {
 
-            $load = $r->total_load ?? 0;
-            $load = is_numeric($load) ? (float)$load : 0;
-            $totalLoad += $load;
+        $totalCapacity += is_numeric($r->rec_capacity ?? null)
+            ? (float)$r->rec_capacity : 0;
 
-            $bank = $r->jumlah_bank ?? 0;
-            $bank = is_numeric($bank) ? (float)$bank : 0;
-            $totalBank += $bank;
+        $totalLoad += is_numeric($r->total_load ?? null)
+            ? (float)$r->total_load : 0;
 
-            $ah = $r->battery_capacity_ah ?? 0;
-            $ah = is_numeric($ah) ? (float)$ah : 0;
-            $totalAh += $ah;
-        }
+        $totalBank += is_numeric($r->jumlah_bank ?? null)
+            ? (float)$r->jumlah_bank : 0;
 
-        $occupancy = 0;
-        if ($totalCapacity > 0) {
-            $occupancy = ($totalLoad / $totalCapacity) * 100;
-        }
+        $totalAh += is_numeric($r->battery_capacity_ah ?? null)
+            ? (float)$r->battery_capacity_ah : 0;
 
-        return [
-            "total_capacity" => round($totalCapacity, 2),
-            "total_load" => round($totalLoad, 2),
-            "total_bank" => (int) $totalBank,
-            "total_ah" => round($totalAh, 2),
-            "occupancy" => round($occupancy, 2),
-            "total_ne" => (int) $rows->count(),
-            "total_system" => (int) $rows->count(),
-        ];
+        $totalBatteryCap += is_numeric($r->battery_cap ?? null)
+            ? (float)$r->battery_cap : 0;
+
+        $totalNE += is_numeric($r->jumlah_ne ?? null)
+            ? (float)$r->jumlah_ne : 0;
     }
 
+    $occupancy = 0;
+
+    if ($totalCapacity > 0) {
+        $occupancy = round(($totalLoad / $totalCapacity) * 100, 2);
+    }
+
+
+    return [
+
+        "total_capacity" => round($totalCapacity,2),
+
+        "total_load" => round($totalLoad,2),
+
+        "total_bank" => (int)$totalBank,
+
+        "total_ah" => round($totalAh,2),
+
+        "total_battery_cap" => round($totalBatteryCap,2),
+
+        "occupancy" => $occupancy,
+
+        "total_ne" => $totalNE > 0 ? (int)$totalNE : $rows->count(),
+
+        "total_system" => $rows->count()
+
+    ];
+}
     private function getPLNProfile()
     {
         $rows = $this->safeGet('dp_power');
@@ -381,21 +501,33 @@ class ProfileController extends Controller
         $row = $rows->first();
 
         $floors = [];
+
         foreach ($rows as $r) {
-            if (!empty($r->floor)) {
-                $floors[] = "Lantai : " . $r->floor;
+
+            if (!empty($r->total_floor)) {
+
+                $lantai = trim((string)$r->total_floor);
+
+                if ($lantai !== "") {
+
+                    $floors[] = "Lantai : " . $lantai;
+
+                }
             }
         }
 
         $floors = array_values(array_unique($floors));
 
         return [
+
             "brand" => $row->brand ?? null,
+
             "floor" => $floors,
-            "jumlah" => (int)$rows->count()
+
+            "jumlah" => $rows->count()
+
         ];
     }
-
     private function getAPARProfile()
     {
         $rows = $this->safeGet('dp_apar');
@@ -421,8 +553,8 @@ class ProfileController extends Controller
         $types = array_values(array_unique($types));
 
         return [
-            "aktif" => $aktif,
-            "tidak_aktif" => $tidakAktif,
+            "aktiv" => $aktif,
+            "tidak_aktiv" => $tidakAktif,
             "Brand" => $brands,
             "Type" => $types,
             "jumlah" => (int)$rows->count(),
