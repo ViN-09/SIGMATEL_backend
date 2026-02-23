@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class ProfilesController extends Controller
+class ProfileController extends Controller
 {
     protected $connection = 'mysql2';
 
