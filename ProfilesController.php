@@ -339,25 +339,29 @@ private function getRECTProfile()
     }
 
     private function getGENSETProfile()
-    {
-        $rows = $this->safeGet('dp_genset');
-        if ($rows->count() < 1) return null;
+{
+    $rows = DB::connection($this->connection)
+        ->table('dp_genset')
+        ->orderBy('id','asc')   // ⬅ GANTI INI
+        ->get();
 
-        $result = [];
-        $i = 1;
+    if ($rows->count() < 1) return null;
 
-        foreach ($rows as $r) {
-            $result[(string)$i] = [
-                "merk" => $r->brand ?? null,
-                "capacity" => $r->capacity_kva ?? null,
-                "load" => $r->load_kva ?? null,
-                "remarks" => $r->remarks ?? ("Genset " . $i),
-            ];
-            $i++;
-        }
+    $result = [];
+    $i = 1;
 
-        return $result;
+    foreach ($rows as $r) {
+        $result[(string)$i] = [
+            "merk" => $r->brand ?? null,
+            "capacity" => $r->capacity_kva ?? null,
+            "load" => $r->load_kva ?? null,
+            "remarks" => $r->remarks ?? ("Genset " . $i),
+        ];
+        $i++;
     }
+
+    return $result;
+}
 
     private function getBBMProfile()
     {
@@ -442,56 +446,54 @@ private function getRECTProfile()
     }
 
     private function getSPACEProfile()
-    {
-        $rows = $this->safeGet('dp_space');
-        if ($rows->count() < 1) return null;
+{
+    $rows = $this->safeGet('dp_space');
+    if ($rows->count() < 1) return null;
 
-        $totalSpace = 0;
-        $spacePerangkat = 0;
-        $spaceCommon = 0;
-        $totalRuangPerangkat = 0;
+    $totalSpace = 0;
+    $spacePerangkat = 0;
+    $spaceCommon = 0;
+    $totalRuangPerangkat = 0;
+    $lantaiMap = [];
 
-        $lantaiMap = [];
+    foreach ($rows as $r) {
 
-        foreach ($rows as $r) {
-            $luas = $r->luas_m2 ?? 0;
-            $luas = is_numeric($luas) ? (float)$luas : 0;
-            $totalSpace += $luas;
+        $totalSpace += is_numeric($r->luas_m2 ?? null) ? (float)$r->luas_m2 : 0;
+        $spacePerangkat += is_numeric($r->terpakai_m2 ?? null) ? (float)$r->terpakai_m2 : 0;
+        $spaceCommon += is_numeric($r->tidakterpakai_m2 ?? null) ? (float)$r->tidakterpakai_m2 : 0;
 
-            $terpakai = $r->terpakai_m2 ?? 0;
-            $terpakai = is_numeric($terpakai) ? (float)$terpakai : 0;
-            $spacePerangkat += $terpakai;
-
-            $tidakTerpakai = $r->tidakterpakai_m2 ?? 0;
-            $tidakTerpakai = is_numeric($tidakTerpakai) ? (float)$tidakTerpakai : 0;
-            $spaceCommon += $tidakTerpakai;
-
-            if (!empty($r->Ruang)) {
-                $totalRuangPerangkat++;
-            }
-
-            $lantai = $r->Lantai ?? null;
-            if ($lantai) {
-                if (!isset($lantaiMap[$lantai])) {
-                    $lantaiMap[$lantai] = 0;
-                }
-                $lantaiMap[$lantai] += 1;
-            }
+        if (!empty($r->Ruang)) {
+            $totalRuangPerangkat++;
         }
 
-        $totalRuanganLantai = [];
-        foreach ($lantaiMap as $lantai => $jumlah) {
-            $totalRuanganLantai["total_ruangan_lantai_" . $lantai] = $jumlah;
+        $lantai = $r->Lantai ?? null;
+        if ($lantai) {
+            if (!isset($lantaiMap[$lantai])) {
+                $lantaiMap[$lantai] = 0;
+            }
+            $lantaiMap[$lantai]++;
         }
-
-        return array_merge([
-            "total_space" => round($totalSpace, 2),
-            "space_perangkat" => round($spacePerangkat, 2),
-            "space_common_area" => round($spaceCommon, 2),
-            "total_ruang_perangkat" => (int)$totalRuangPerangkat,
-            "total_common_area" => (int)$rows->count(),
-        ], $totalRuanganLantai);
     }
+
+    $totalRuanganLantai = [];
+    foreach ($lantaiMap as $lantai => $jumlah) {
+        $totalRuanganLantai["total_ruangan_lantai_" . $lantai] = $jumlah;
+    }
+
+    $data = [
+        "total_space" => round($totalSpace, 2),
+        "space_perangkat" => round($spacePerangkat, 2),
+        "space_common_area" => round($spaceCommon, 2),
+        "total_ruang_perangkat" => (int)$totalRuangPerangkat,
+        "total_common_area" => (int)$rows->count(),
+    ];
+
+    $data = array_merge($data, $totalRuanganLantai);
+
+    $data["total_ruangan"] = (int)$rows->count(); 
+
+    return $data;
+}
 
     private function getFSSProfile()
     {
