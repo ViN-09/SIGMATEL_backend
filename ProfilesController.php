@@ -42,12 +42,12 @@ class ProfilesController extends Controller
         $all = $this->safeGet('dp_cctv');
 
         $indoor = $all->filter(function ($r) {
-            return strtolower(trim($r->indoor_outdoor ?? '')) === 'indoor';
-        })->sum('total_camera');
+        return strtolower(trim($r->indoor_outdoor ?? '')) === 'indoor';
+        })->count();
 
         $outdoor = $all->filter(function ($r) {
-            return strtolower(trim($r->indoor_outdoor ?? '')) === 'outdoor';
-        })->sum('total_camera');
+        return strtolower(trim($r->indoor_outdoor ?? '')) === 'outdoor';
+        })->count();
 
         return [
             "indoor" => (int) $indoor,
@@ -308,7 +308,7 @@ private function getRECTProfile()
             "occupancy" => (is_numeric($row->capacity_kva ?? null) && (float)$row->capacity_kva > 0)
                 ? round(((float)$row->load_kva / (float)$row->capacity_kva) * 100, 2)
                 : 0,
-            "supply" => $row->operation_aging ?? null,
+            "supply" => $row->operation_aging_kva_pln ?? null,
             "tagihan_listrik" => $row->keterangan ?? null,
         ];
     }
