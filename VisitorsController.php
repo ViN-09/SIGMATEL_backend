@@ -25,22 +25,38 @@ class VisitorsController extends Controller
         return response()->json(['success' => true, 'data' => $data], 200);
     }
 
-    // PATOKAN TELING: /visitor/waiting
     public function waiting()
     {
         $data = DB::connection($this->connection)
             ->table($this->table)
-            ->whereIn('status', ['pending', 'approved']) // sesuaikan kalau teling cuma pending
+            ->whereIn('status', ['pending', 'approved'])
             ->orderByDesc('created_at')
             ->get();
 
         return response()->json(['success' => true, 'data' => $data], 200);
     }
 
+    public function completed()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->where('status', 'selesai')
+            ->whereNotNull('dokumentasi_in')
+            ->whereNotNull('dokumentasi_out')
+            ->where('dokumentasi_in', '!=', '')
+            ->where('dokumentasi_out', '!=', '')
+            ->orderByDesc('created_at')
+            ->get();
+    
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    }
+
     public function registvisitor(Request $request)
     {
         try {
-            // lebih aman daripada $request->json()->all()
             $data = $request->all();
 
             if (empty($data)) {
@@ -166,7 +182,6 @@ class VisitorsController extends Controller
                 'updated_at' => Carbon::now(),
             ];
 
-            // upload dokumentasi_in
             if ($request->hasFile('dokumentasi_in')) {
                 $file = $request->file('dokumentasi_in');
                 if (!$file->isValid()) {
@@ -181,7 +196,6 @@ class VisitorsController extends Controller
                 $update['dokumentasi_in'] = $filename;
             }
 
-            // upload dokumentasi_out
             if ($request->hasFile('dokumentasi_out')) {
                 $file = $request->file('dokumentasi_out');
                 if (!$file->isValid()) {

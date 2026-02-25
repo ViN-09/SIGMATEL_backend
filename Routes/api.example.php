@@ -25,11 +25,12 @@ Route::prefix('ttc_paniki')->group(function () {
     });
 
     // visitors
-    Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
-    Route::get('/visitor', [VisitorsController::class, 'index']);
-    Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
-    Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
-    Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+        Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
+        Route::get('/visitor', [VisitorsController::class, 'index']);
+        Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
+        Route::get('/visitor/completed', [VisitorsController::class, 'completed']);
+        Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+        Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
 
 
     Route::prefix('user')->group(function () {
