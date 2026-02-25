@@ -31,6 +31,21 @@ class VisitorsController extends Controller
         ], 200);
     }
 
+    // ✅ TAMBAHAN: endpoint /visitor/waiting
+    public function waiting()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ], 200);
+    }
+
     public function registvisitor(Request $request)
     {
         try {
@@ -43,7 +58,6 @@ class VisitorsController extends Controller
                 ], 400);
             }
 
-            // Validasi sesuai React payload
             $validator = Validator::make($data, [
                 'name' => 'required|string|max:255',
                 'company' => 'required|string|max:255',
@@ -52,7 +66,7 @@ class VisitorsController extends Controller
                 'idNumber' => 'required|string|max:100',
                 'visitId' => 'required|string|max:100',
                 'activity' => 'required|string',
-                'workspace' => 'required|string|max:20',
+                'workspace' => 'required|string|max:50',
                 'signature' => 'required|string',
             ]);
 
@@ -64,7 +78,7 @@ class VisitorsController extends Controller
                 ], 422);
             }
 
-            // proses signature (base64 png dari canvas)
+            // signature (base64)
             $signatureData = $data['signature'];
             $signatureData = preg_replace('#^data:image/\w+;base64,#i', '', $signatureData);
             $signatureData = str_replace(' ', '+', $signatureData);
@@ -93,8 +107,11 @@ class VisitorsController extends Controller
                 'ruang_kerja' => $data['workspace'],
                 'signature' => $signatureName,
                 'status' => 'pending',
+
+                // ✅ FIX: konsisten dokumentasi_*
                 'dokumentasi_in' => '',
                 'dokumentasi_out' => '',
+
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -156,7 +173,7 @@ class VisitorsController extends Controller
                 'updated_at' => Carbon::now(),
             ];
 
-            // upload dokumentasi_in/out (opsional)
+            // ✅ upload dokumentasi_in/out (opsional)
             if ($request->hasFile('dokumentasi_in')) {
                 $file = $request->file('dokumentasi_in');
 
