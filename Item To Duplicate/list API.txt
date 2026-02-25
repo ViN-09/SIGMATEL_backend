@@ -1,8 +1,26 @@
+
 https://azure-beaver-930369.hostingersite.com/api/user/MND24024311049
-https://azure-beaver-930369.hostingersite.com/api/ttc_teling/profiles
+https://azure-beaver-930369.hostingersite.com/api/user/stafflist/ttc_teling/ME 
+
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/profiles 
+
+Crud - On Wait
+
+Manda - property ceklist
 https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/property
 https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/staffform
 https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/power
-https://azure-beaver-930369.hostingersite.com/api/user/stafflist/ttc_teling/ME
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/suhu_kwh
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/it_load
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/coling_system
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/genset1
+https://azure-beaver-930369.hostingersite.com/api/ttc_teling/checklist2/requestTableStructure/genset2
 
-//test manda
+Adje - DAPOT CRUD
+- CRUD Dapot
+    note :  buat CRUD controler untuk dapot dari untuk forntend di folder Adjie 
+            dengan alamat API yg sudah ada pada Auth.js
+
+
+Total (%) : 50% 
+50% Sisanya setelah di atas 100% Selesai

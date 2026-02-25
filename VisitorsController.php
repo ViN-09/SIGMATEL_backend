@@ -12,10 +12,7 @@ use Carbon\Carbon;
 
 class VisitorsController extends Controller
 {
-    // koneksi DB khusus paniki (config/database.php)
     protected string $connection = 'mysql2';
-
-    // tabel khusus paniki
     protected string $table = 'visitors';
 
     public function index()
@@ -25,25 +22,34 @@ class VisitorsController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ], 200);
+        return response()->json(['success' => true, 'data' => $data], 200);
+    }
+
+    // PATOKAN TELING: /visitor/waiting
+    public function waiting()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->whereIn('status', ['pending', 'approved']) // sesuaikan kalau teling cuma pending
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $data], 200);
     }
 
     public function registvisitor(Request $request)
     {
         try {
-            $data = $request->json()->all();
+            // lebih aman daripada $request->json()->all()
+            $data = $request->all();
 
             if (empty($data)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Request body kosong / JSON tidak terbaca',
+                    'message' => 'Request body kosong / tidak terbaca',
                 ], 400);
             }
 
-            // Validasi sesuai React payload
             $validator = Validator::make($data, [
                 'name' => 'required|string|max:255',
                 'company' => 'required|string|max:255',
@@ -52,7 +58,7 @@ class VisitorsController extends Controller
                 'idNumber' => 'required|string|max:100',
                 'visitId' => 'required|string|max:100',
                 'activity' => 'required|string',
-                'workspace' => 'required|string|max:20',
+                'workspace' => 'required|string|max:50',
                 'signature' => 'required|string',
             ]);
 
@@ -64,7 +70,6 @@ class VisitorsController extends Controller
                 ], 422);
             }
 
-            // proses signature (base64 png dari canvas)
             $signatureData = $data['signature'];
             $signatureData = preg_replace('#^data:image/\w+;base64,#i', '', $signatureData);
             $signatureData = str_replace(' ', '+', $signatureData);
@@ -93,8 +98,8 @@ class VisitorsController extends Controller
                 'ruang_kerja' => $data['workspace'],
                 'signature' => $signatureName,
                 'status' => 'pending',
-                'dokumentasi_in' => '',
-                'dokumentasi_out' => '',
+                'dokumentasi_in' => null,
+                'dokumentasi_out' => null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -103,10 +108,15 @@ class VisitorsController extends Controller
                 ->table($this->table)
                 ->insertGetId($insertData);
 
+            $visitor = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Visitor registered successfully',
-                'data' => array_merge(['id' => $id], $insertData),
+                'data' => $visitor,
             ], 201);
 
         } catch (\Exception $e) {
@@ -156,10 +166,9 @@ class VisitorsController extends Controller
                 'updated_at' => Carbon::now(),
             ];
 
-            // upload dokumentasi_in/out (opsional)
+            // upload dokumentasi_in
             if ($request->hasFile('dokumentasi_in')) {
                 $file = $request->file('dokumentasi_in');
-
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -168,13 +177,13 @@ class VisitorsController extends Controller
                 }
 
                 $filename = 'in_' . time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-                $file->storeAs('public/visitors', $filename);
+                $file->storeAs('visitors', $filename, 'public');
                 $update['dokumentasi_in'] = $filename;
             }
 
+            // upload dokumentasi_out
             if ($request->hasFile('dokumentasi_out')) {
                 $file = $request->file('dokumentasi_out');
-
                 if (!$file->isValid()) {
                     return response()->json([
                         'success' => false,
@@ -183,7 +192,7 @@ class VisitorsController extends Controller
                 }
 
                 $filename = 'out_' . time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
-                $file->storeAs('public/visitors', $filename);
+                $file->storeAs('visitors', $filename, 'public');
                 $update['dokumentasi_out'] = $filename;
             }
 
@@ -192,10 +201,15 @@ class VisitorsController extends Controller
                 ->where('id', $id)
                 ->update($update);
 
+            $fresh = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Status berhasil diupdate',
-                'data' => $update,
+                'data' => $fresh,
             ], 200);
 
         } catch (\Exception $e) {
