@@ -32,7 +32,12 @@ Route::prefix('ttc_paniki')->group(function () {
         Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
         Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
 
+    Route::prefix('data_potensi2')->group(function () {
+        Route::get('fullDapot', [data_potensi::class, 'fullDapot']);
+        Route::post('crudDapot', [data_potensi::class, 'crudDapot']);
 
+    });
+    
     Route::prefix('user')->group(function () {
         Route::get('/{id}', [UserController::class, 'show']);
     });
