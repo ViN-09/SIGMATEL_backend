@@ -1,87 +1,238 @@
 <?php
+
 namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class VisitorsController extends Controller
 {
-    // Menampilkan daftar pengunjung
-    public function getVisitors()
+    protected string $connection = 'mysql2';
+    protected string $table = 'visitors';
+
+    public function index()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $data], 200);
+    }
+
+    public function waiting()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $data], 200);
+    }
+
+    public function completed()
+    {
+        $data = DB::connection($this->connection)
+            ->table($this->table)
+            ->where('status', 'selesai')
+            ->whereNotNull('dokumentasi_in')
+            ->whereNotNull('dokumentasi_out')
+            ->where('dokumentasi_in', '!=', '')
+            ->where('dokumentasi_out', '!=', '')
+            ->orderByDesc('created_at')
+            ->get();
+    
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    }
+
+    public function registvisitor(Request $request)
     {
         try {
-            $data = DB::table('visitors')->get();
+            $data = $request->all();
+
+            if (empty($data)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Request body kosong / tidak terbaca',
+                ], 400);
+            }
+
+            $validator = Validator::make($data, [
+                'name' => 'required|string|max:255',
+                'company' => 'required|string|max:255',
+                'phone' => 'required|string|max:50',
+                'idType' => 'required|string|max:50',
+                'idNumber' => 'required|string|max:100',
+                'visitId' => 'required|string|max:100',
+                'activity' => 'required|string',
+                'workspace' => 'required|string|max:50',
+                'signature' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $signatureData = $data['signature'];
+            $signatureData = preg_replace('#^data:image/\w+;base64,#i', '', $signatureData);
+            $signatureData = str_replace(' ', '+', $signatureData);
+
+            $decoded = base64_decode($signatureData);
+            if ($decoded === false) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Signature invalid',
+                ], 400);
+            }
+
+            $signatureName = 'signature_' . time() . '.png';
+            Storage::disk('public')->put('signatures/' . $signatureName, $decoded);
+
+            $now = Carbon::now();
+
+            $insertData = [
+                'name' => $data['name'],
+                'company' => $data['company'],
+                'phone' => $data['phone'],
+                'id_type' => $data['idType'],
+                'id_number' => $data['idNumber'],
+                'visit_id' => $data['visitId'],
+                'activity' => $data['activity'],
+                'ruang_kerja' => $data['workspace'],
+                'signature' => $signatureName,
+                'status' => 'pending',
+                'dokumentasi_in' => null,
+                'dokumentasi_out' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            $id = DB::connection($this->connection)
+                ->table($this->table)
+                ->insertGetId($insertData);
+
+            $visitor = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
 
             return response()->json([
                 'success' => true,
-                'message' => 'List of visitors waiting for approval',
-                'data' => $data
-            ]);
+                'message' => 'Visitor registered successfully',
+                'data' => $visitor,
+            ], 201);
+
         } catch (\Exception $e) {
-            Log::error("Error getVisitors: " . $e->getMessage());
+            Log::error($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error retrieving data',
-                'error' => $e->getMessage()
+                'message' => 'Server error',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
-    // Menambah pengunjung baru
-    public function addVisitor(Request $request)
+    public function updateStatus(Request $request, $id)
     {
         try {
-            // Validasi data request
-            $request->validate([
-                'name' => 'required|string',
-                'company' => 'required|string',
-                'phone' => 'required|string',
-                'id_type' => 'required|string',
-                'id_number' => 'required|string',
-                'visit_id' => 'required|string',
-                'activity' => 'required|string',
-                'status' => 'required|string',
-                'signature' => 'nullable|string', // Pastikan signature adalah base64 string
-            ]);
+            $visitor = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
 
-            // Menyimpan file signature jika ada
-            $signaturePath = null;
-            if ($request->signature) {
-                // Decode base64 string
-                $signatureData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $request->signature));
-                $signaturePath = 'signatures/' . uniqid() . '.png';
-                Storage::disk('public')->put($signaturePath, $signatureData);
+            if (!$visitor) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Visitor tidak ditemukan',
+                ], 404);
             }
 
-            // Menyimpan data visitor ke dalam tabel visitors
-            DB::table('visitors')->insert([
-                'name' => $request->name,
-                'company' => $request->company,
-                'phone' => $request->phone,
-                'id_type' => $request->id_type,
-                'id_number' => $request->id_number,
-                'visit_id' => $request->visit_id,
-                'activity' => $request->activity,
-                'created_at' => now(),
-                'updated_at' => now(),
-                'status' => $request->status,
-                'signature' => $signaturePath,
-            ]);
+            $status = $request->input('status');
+            if (!$status) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Status wajib dikirim',
+                ], 422);
+            }
+
+            $allowed = ['approved', 'selesai', 'rejected', 'pending'];
+            if (!in_array($status, $allowed, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Status tidak valid',
+                ], 422);
+            }
+
+            $update = [
+                'status' => $status,
+                'updated_at' => Carbon::now(),
+            ];
+
+            if ($request->hasFile('dokumentasi_in')) {
+                $file = $request->file('dokumentasi_in');
+                if (!$file->isValid()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File dokumentasi_in tidak valid',
+                    ], 422);
+                }
+
+                $filename = 'in_' . time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+                $file->storeAs('visitors', $filename, 'public');
+                $update['dokumentasi_in'] = $filename;
+            }
+
+            if ($request->hasFile('dokumentasi_out')) {
+                $file = $request->file('dokumentasi_out');
+                if (!$file->isValid()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'File dokumentasi_out tidak valid',
+                    ], 422);
+                }
+
+                $filename = 'out_' . time() . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+                $file->storeAs('visitors', $filename, 'public');
+                $update['dokumentasi_out'] = $filename;
+            }
+
+            DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->update($update);
+
+            $fresh = DB::connection($this->connection)
+                ->table($this->table)
+                ->where('id', $id)
+                ->first();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Visitor added successfully'
-            ], 201);
+                'message' => 'Status berhasil diupdate',
+                'data' => $fresh,
+            ], 200);
 
         } catch (\Exception $e) {
-            Log::error("Error addVisitor: " . $e->getMessage());
+            Log::error($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Error adding visitor',
-                'error' => $e->getMessage()
+                'message' => 'Server error',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
