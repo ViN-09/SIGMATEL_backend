@@ -12,6 +12,13 @@ class ProfilesController extends Controller
 {
     protected $connection = 'mysql2';
 
+    public function hello()
+    {
+        return response()->json([
+            'message' => 'hello test con'
+        ]);
+    }
+
     private function safeFirst($table)
     {
         try {
@@ -35,6 +42,7 @@ class ProfilesController extends Controller
             return collect([]);
         }
     }
+
 
     private function getCCTVProfile()
     {
