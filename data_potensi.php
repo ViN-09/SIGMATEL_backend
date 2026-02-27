@@ -188,13 +188,6 @@ class data_potensi extends Controller
                 $data   = $request->input('data',[]);
                 $id     = $request->input('id');
 
-
-                /*
-                =========================
-                VALIDASI TABEL
-                =========================
-                */
-
                 if(!$table){
                     return response()->json([
                         "success"=>false,
@@ -209,14 +202,6 @@ class data_potensi extends Controller
                     ],404);
                 }
 
-
-
-                /*
-                =========================
-                CREATE
-                =========================
-                */
-
                 if($action=="create"){
 
                     if(empty($data)){
@@ -225,12 +210,6 @@ class data_potensi extends Controller
                             "message"=>"Data tidak boleh kosong"
                         ],400);
                     }
-
-
-
-                    /*
-                    AMBIL STRUKTUR TABEL
-                    */
 
                     $columns = DB::connection($this->connection)
                     ->select("
@@ -246,12 +225,6 @@ class data_potensi extends Controller
                         $table
                     ]);
 
-
-
-                    /*
-                    DETEKSI AUTO_INCREMENT
-                    */
-
                     $autoIncrement=false;
 
                     foreach($columns as $col){
@@ -262,12 +235,6 @@ class data_potensi extends Controller
                             $autoIncrement=true;
                         }
                     }
-
-
-
-                    /*
-                    AUTO ID JIKA BUKAN AUTO_INCREMENT
-                    */
 
                     if(!$autoIncrement){
 
@@ -281,12 +248,6 @@ class data_potensi extends Controller
                         }
 
                     }
-
-
-
-                    /*
-                    AUTO FILL FIELD WAJIB
-                    */
 
                     foreach($columns as $col){
 
@@ -316,8 +277,6 @@ class data_potensi extends Controller
 
                     }
 
-
-
                     DB::connection($this->connection)
                         ->table($table)
                         ->insert($data);
@@ -329,14 +288,6 @@ class data_potensi extends Controller
                     ]);
 
                 }
-
-
-
-                /*
-                =========================
-                UPDATE
-                =========================
-                */
 
                 if($action=="update"){
 
@@ -363,14 +314,6 @@ class data_potensi extends Controller
 
                 }
 
-
-
-                /*
-                =========================
-                DELETE
-                =========================
-                */
-
                 if($action=="delete"){
 
                     if(!$id){
@@ -396,14 +339,10 @@ class data_potensi extends Controller
 
                 }
 
-
-
                 return response()->json([
                     "success"=>false,
                     "message"=>"Action tidak dikenal"
                 ],400);
-
-
 
             } catch (\Throwable $e){
 
