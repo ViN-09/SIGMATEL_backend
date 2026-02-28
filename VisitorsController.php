@@ -114,8 +114,8 @@ class VisitorsController extends Controller
                 'ruang_kerja' => $data['workspace'],
                 'signature' => $signatureName,
                 'status' => 'pending',
-                'dokumentasi_in' => null,
-                'dokumentasi_out' => null,
+                'dokumentasi_in' => '',
+                'dokumentasi_out' => '',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
