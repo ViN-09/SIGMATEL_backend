@@ -6,6 +6,7 @@ use App\Http\Controllers\ttc_paniki_controllers\ProfilesController;
 use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\UserController;
 use App\Http\Controllers\ttc_paniki_controllers\VisitorsController;
+use App\Http\Controllers\ttc_paniki_controllers\VisitorLog;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('ttc_paniki')->group(function () {
@@ -25,20 +26,25 @@ Route::prefix('ttc_paniki')->group(function () {
     });
 
     // visitors
-        Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
-        Route::get('/visitor', [VisitorsController::class, 'index']);
-        Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
-        Route::get('/visitor/completed', [VisitorsController::class, 'completed']);
-        Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
-        Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+    Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
+    Route::get('/visitor', [VisitorsController::class, 'index']);
+    Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
+    Route::get('/visitor/completed', [VisitorsController::class, 'completed']);
+    Route::get('/visitor/visitor/completed', [VisitorsController::class, 'completed']);
+    Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+    Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
 
-    Route::prefix('data_potensi2')->group(function () {
-        Route::get('fullDapot', [data_potensi::class, 'fullDapot']);
-        Route::post('crudDapot', [data_potensi::class, 'crudDapot']);
-
+    // visitorlog
+    Route::prefix('visitorlog')->group(function () {
+        Route::get('/', [VisitorLog::class, 'getAllLogs']);
+        Route::get('/{username}', [VisitorLog::class, 'getLogsByUsername']);
+        Route::post('/', [VisitorLog::class, 'addLog']);
     });
-    
 
-        Route::get('/profiles', [ProfilesController::class, 'profiles']);
-        Route::get('/hello', [ProfilesController::class, 'hello']);
+    Route::prefix('user')->group(function () {
+        Route::get('/{id}', [UserController::class, 'show']);
+    });
+
+    Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
+    Route::get('/profiles', [ProfilesController::class, 'profiles']);
 });
