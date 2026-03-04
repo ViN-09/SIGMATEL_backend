@@ -1,0 +1,45 @@
+# =====================
+# GLOBAL
+# =====================
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# =====================
+# NODE / REACT
+# =====================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.*
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# =====================
+# LARAVEL
+# =====================
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*
+backend/.env
+backend/.env.*
+backend.phpunit.result.cache
+
+# =====================
+# LARAVEL - OS & TOOLS
+# =====================
+backend/.phpunit.cache/
+backend/.fleet/

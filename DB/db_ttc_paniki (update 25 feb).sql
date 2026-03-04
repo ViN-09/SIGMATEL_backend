@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Feb 25, 2026 at 08:20 AM
+-- Generation Time: Mar 02, 2026 at 08:55 AM
 -- Server version: 8.4.3
--- PHP Version: 8.4.3
+-- PHP Version: 8.3.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -56341,7 +56341,8 @@ CREATE TABLE `visitors` (
 INSERT INTO `visitors` (`id`, `name`, `company`, `phone`, `id_type`, `id_number`, `visit_id`, `activity`, `signature`, `created_at`, `updated_at`, `ruang_kerja`, `dokumentasi_in`, `dokumentasi_out`, `status`) VALUES
 (1, 'Taufiq Akbar Makalalag', 'ZTE Indonesia', '-', '-', '-', 'VISIT/EXT/23012026/TTCPANIKI/1202488', 'Project - project telkomsel / instalasi perangkat', '-', '2026-01-23 08:00:00', '2026-01-23 18:00:00', 'TTC Paniki Manado - Andi Jabal Nur', 'NON DISCLOSURE AGREEMENT Taufic.pdf', 'NON DISCLOSURE AGREEMENT Taufic.pdf', 'Clock In'),
 (2, 'Yuda Tungkagi', 'ZTE', '-', '-', '-', 'VISIT/EXT/23012026/TTCPANIKI/1201828', 'Project - Projek', '-', '2026-01-23 08:00:00', '2026-01-23 17:00:00', 'TTC Paniki Manado - Andi Jabal Nur', 'SIK_21012026_TTCPANIKI_711128_21-01-2026.pdf', '5347922_TPAS-SIK_I_2026.pdf', 'Clock In'),
-(3, 'Dado Mulyawan', 'ZTE', '-', '-', '-', 'VISIT/EXT/24022026/TTCPANIKI/1232942', 'Project - Instalasi & ATP MME MDO6 & MDO7 ZTE', '-', '2026-02-24 08:00:00', '2026-02-24 23:59:00', 'TTC Paniki Manado - Andi Jabal Nur', 'eSIK Paniki - Dado Mulyawan.pdf', '5469566_TPAS-SIK_II_2026_Paniki_Dado.pdf', 'Clock In');
+(3, 'Dado Mulyawan', 'ZTE', '-', '-', '-', 'VISIT/EXT/24022026/TTCPANIKI/1232942', 'Project - Instalasi & ATP MME MDO6 & MDO7 ZTE', '-', '2026-02-24 08:00:00', '2026-02-24 23:59:00', 'TTC Paniki Manado - Andi Jabal Nur', 'eSIK Paniki - Dado Mulyawan.pdf', '5469566_TPAS-SIK_II_2026_Paniki_Dado.pdf', 'Clock In'),
+(4, 'raja', 'raja', 'raja', 'KTP', 'raja', 'raja', 'raja', 'signature_1772441391.png', '2026-03-02 00:49:52', '2026-03-02 00:49:52', 'Ruang Perangkat', '', '', 'pending');
 
 -- --------------------------------------------------------
 
@@ -57169,6 +57170,12 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `user_activity`
 --
 ALTER TABLE `user_activity`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `visitors`
+--
+ALTER TABLE `visitors`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 COMMIT;
 
