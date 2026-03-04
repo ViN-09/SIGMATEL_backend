@@ -188,6 +188,205 @@ $columns = DB::select("SHOW COLUMNS FROM trafof_c");
     ]);
 }
 
+if ($form == 'suhu_kwh') {
+
+    // ======================
+    // REPORT KWH
+    // ======================
+
+    $kwh_latest = DB::table('report_kwh')
+                    ->orderBy('id_report_kwh', 'desc')
+                    ->first();
+
+    $kwh_columns = DB::select("SHOW COLUMNS FROM report_kwh");
+
+    $report_kwh = [];
+
+    foreach ($kwh_columns as $column) {
+
+        $field = $column->Field;
+
+        if ($field == 'id_report_kwh') {
+            continue;
+        }
+
+        $type = strtoupper(strtok($column->Type, '('));
+
+        $latestValue = "-";
+
+        if ($kwh_latest && isset($kwh_latest->$field)) {
+            $latestValue = $kwh_latest->$field ?? "-";
+        }
+
+        $report_kwh[] = [
+            "Field" => $field,
+            "Type" => $type,
+            "latestValue" => $latestValue
+        ];
+    }
+
+
+    // ======================
+    // REPORT SUHU
+    // ======================
+
+    $suhu_latest = DB::table('report_suhu')
+                    ->orderBy('id_report_suhu', 'desc')
+                    ->first();
+
+    $suhu_columns = DB::select("SHOW COLUMNS FROM report_suhu");
+
+    $report_suhu = [];
+
+    foreach ($suhu_columns as $column) {
+
+        $field = $column->Field;
+
+        if ($field == 'id_report_suhu') {
+            continue;
+        }
+
+        $type = strtoupper(strtok($column->Type, '('));
+
+        $latestValue = "-";
+
+        if ($suhu_latest && isset($suhu_latest->$field)) {
+            $latestValue = $suhu_latest->$field ?? "-";
+        }
+
+        $report_suhu[] = [
+            "Field" => $field,
+            "Type" => $type,
+            "latestValue" => $latestValue
+        ];
+    }
+
+    return response()->json([
+        "report_kwh"  => $report_kwh,
+        "report_suhu" => $report_suhu
+    ]);
+}
+
+if ($form == 'it_load') {
+
+    /*
+    |--------------------------------------------------------------------------
+    | RECTIFIER
+    |--------------------------------------------------------------------------
+    */
+    $rectifiers = DB::table('report_rectifier')
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+    $rectifierData = [];
+    $rectifierColumns = DB::select("SHOW COLUMNS FROM report_rectifier");
+
+    $recIndex = 1;
+
+    foreach ($rectifiers as $row) {
+
+        $unit = [];
+
+        foreach ($rectifierColumns as $column) {
+
+            $field = $column->Field;
+            if ($field == 'id') continue;
+
+            $type = strtoupper(strtok($column->Type, '('));
+
+            $unit[] = [
+                "Field" => $field,
+                "Type" => $type,
+                "latestValue" => $row->$field ?? "-"
+            ];
+        }
+
+        $rectifierData["rec" . $recIndex] = $unit;
+        $recIndex++;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPS
+    |--------------------------------------------------------------------------
+    */
+    $upsRows = DB::table('report_ups')
+                ->orderBy('id', 'asc')
+                ->get();
+
+    $upsData = [];
+    $upsColumns = DB::select("SHOW COLUMNS FROM report_ups");
+
+    $upsIndex = 1;
+
+    foreach ($upsRows as $row) {
+
+        $unit = [];
+
+        foreach ($upsColumns as $column) {
+
+            $field = $column->Field;
+            if ($field == 'id') continue;
+
+            $type = strtoupper(strtok($column->Type, '('));
+
+            $unit[] = [
+                "Field" => $field,
+                "Type" => $type,
+                "latestValue" => $row->$field ?? "-"
+            ];
+        }
+
+        $upsData["ups" . $upsIndex] = $unit;
+        $upsIndex++;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DCPDU
+    |--------------------------------------------------------------------------
+    */
+    $dcpduRows = DB::table('report_dcpdu')
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+    $dcpduData = [];
+    $dcpduColumns = DB::select("SHOW COLUMNS FROM report_dcpdu");
+
+    $dcpduIndex = 1;
+
+    foreach ($dcpduRows as $row) {
+
+        $unit = [];
+
+        foreach ($dcpduColumns as $column) {
+
+            $field = $column->Field;
+            if ($field == 'id') continue;
+
+            $type = strtoupper(strtok($column->Type, '('));
+
+            $unit[] = [
+                "Field" => $field,
+                "Type" => $type,
+                "latestValue" => $row->$field ?? "-"
+            ];
+        }
+
+        $dcpduData["dcpdu_" . $dcpduIndex] = $unit;
+        $dcpduIndex++;
+    }
+
+
+    return response()->json([
+        "rectifier" => $rectifierData,
+        "ups"       => $upsData,
+        "dcpdu"     => $dcpduData
+    ]);
+}
+
         return response()->json([
             "message" => "Form not found"
         ], 404);
