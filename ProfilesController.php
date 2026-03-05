@@ -4,20 +4,11 @@ namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
-
-
 use Carbon\Carbon;
 
 class ProfilesController extends Controller
 {
     protected $connection = 'mysql2';
-
-    public function hello()
-    {
-        return response()->json([
-            'message' => 'hello test con'
-        ]);
-    }
 
     private function safeFirst($table)
     {
@@ -42,7 +33,6 @@ class ProfilesController extends Controller
             return collect([]);
         }
     }
-
 
     private function getCCTVProfile()
     {
@@ -655,13 +645,16 @@ private function getRECTProfile()
                 }
             }
 
-        } catch (\Throwable $e) {
-
             return response()->json([
-                "success" => false,
-                "message" => "Failed to retrieve profiles",
-                "error" => $e->getMessage()
-            ], 500);
+                "success" => true,
+                "message" => "All profile data retrieved successfully",
+                "data" => array_merge($profiles, [
+                    "timestamp" => Carbon::now()->format('Y-m-d H:i:s'),
+                    "site" => $siteName
+                ]),
+                "total_profiles" => $totalProfiles,
+                "response_time" => round(microtime(true) - $start, 15)
+            ]);
 
         } catch (\Throwable $e) {
             return response()->json([
@@ -669,7 +662,6 @@ private function getRECTProfile()
                 "message" => "Failed to generate profiles",
                 "error" => $e->getMessage()
             ], 500);
-
         }
     }
 }
