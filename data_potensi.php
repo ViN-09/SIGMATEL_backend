@@ -223,22 +223,48 @@ class data_potensi extends Controller
 
             if($action == "create"){
 
-                if(empty($data)){
-                    $data = $request->except(['action','mode','table','id','user_id']);
-                }
+                $data = $request->input('data', []);
 
-                if(!isset($data['id'])){
+                $columns = Schema::connection($this->connection)->getColumnListing($table);
 
-                    $lastId = DB::connection($this->connection)
-                        ->table($table)
-                        ->max('id');
+                $columnInfo = DB::connection($this->connection)
+                    ->select("SHOW COLUMNS FROM `$table`");
 
-                    $data['id'] = $lastId ? $lastId + 1 : 1;
+                $filtered = [];
+
+                foreach($columns as $col){
+
+                    if($col == 'id'){
+                        continue;
+                    }
+
+                    if(isset($data[$col])){
+                        $filtered[$col] = $data[$col];
+                        continue;
+                    }
+
+                    foreach($columnInfo as $info){
+                        if($info->Field == $col){
+
+                            if($info->Default !== null){
+                                $filtered[$col] = $info->Default;
+                            }else{
+      
+                                if(str_contains($info->Type,'int')){
+                                    $filtered[$col] = 0;
+                                }else if(str_contains($info->Type,'date')){
+                                    $filtered[$col] = null;
+                                }else{
+                                    $filtered[$col] = "";
+                                }
+                            }
+                        }
+                    }
                 }
 
                 DB::connection($this->connection)
                     ->table($table)
-                    ->insert($data);
+                    ->insert($filtered);
 
                 return response()->json([
                     "success"=>true,
