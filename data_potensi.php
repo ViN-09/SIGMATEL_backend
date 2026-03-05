@@ -131,13 +131,11 @@ class data_potensi extends Controller
         try {
 
             $tables = DB::connection($this->connection)->select('SHOW TABLES');
-
             $dbName = DB::connection($this->connection)->getDatabaseName();
-
-            $key = 'Tables_in_' . $dbName;
+            $key    = 'Tables_in_' . $dbName;
 
             $summary = [];
-            $detail = [];
+            $detail  = [];
 
             foreach ($tables as $tbl) {
 
@@ -150,15 +148,17 @@ class data_potensi extends Controller
                     ->table($tableName)
                     ->get();
 
-                $summary[]=[
+                $summary[] = [
                     "nama_tabel"=>$tableName,
                     "length"=>$rows->count()
                 ];
 
-                $detail[$tableName]=$rows;
+                $detail[$tableName] = $rows;
             }
 
             return response()->json([
+
+                "success"=>true,
 
                 "message"=>"success",
 
@@ -170,189 +170,143 @@ class data_potensi extends Controller
 
         } catch (\Throwable $e){
 
+            Log::error("fullDapot error : ".$e->getMessage());
+
             return response()->json([
 
                 "success"=>false,
-                "message"=>$e->getMessage()
+
+                "message"=>$e->getMessage(),
+
+                "data_potesi_list"=>[],
+
+                "datapotensi"=>(object)[]
 
             ],500);
 
         }
     }
-        public function crudDapot(Request $request)
-        {
-            try {
 
-                $action = strtolower(trim($request->input('action')));
-                $table  = trim($request->input('table'));
-                $data   = $request->input('data',[]);
-                $id     = $request->input('id');
+    public function crudDapot(Request $request)
+    {
+        try {
 
-                if(!$table){
+            $action = strtolower(trim($request->input('action') ?? $request->input('mode')));
+            $table  = trim($request->input('table'));
+            $data   = $request->input('data', []);
+            $id     = $request->input('id');
+
+
+            if(!$table){
+                return response()->json([
+                    "success"=>false,
+                    "message"=>"Nama tabel wajib diisi"
+                ],400);
+            }
+
+            if(!str_starts_with($table,'dp_')){
+                return response()->json([
+                    "success"=>false,
+                    "message"=>"Tabel tidak diizinkan"
+                ],403);
+            }
+
+            if(!Schema::connection($this->connection)->hasTable($table)){
+                return response()->json([
+                    "success"=>false,
+                    "message"=>"Table tidak ditemukan"
+                ],404);
+            }
+
+            if($action == "add")   $action = "create";
+            if($action == "edit")  $action = "update";
+
+            if($action == "create"){
+
+                if(empty($data)){
+                    $data = $request->except(['action','mode','table','id','user_id']);
+                }
+
+                if(!isset($data['id'])){
+
+                    $lastId = DB::connection($this->connection)
+                        ->table($table)
+                        ->max('id');
+
+                    $data['id'] = $lastId ? $lastId + 1 : 1;
+                }
+
+                DB::connection($this->connection)
+                    ->table($table)
+                    ->insert($data);
+
+                return response()->json([
+                    "success"=>true,
+                    "message"=>"Data berhasil ditambahkan"
+                ]);
+            }
+
+            if($action == "update"){
+
+                if(!$id){
                     return response()->json([
                         "success"=>false,
-                        "message"=>"Nama tabel wajib diisi"
+                        "message"=>"ID wajib diisi"
                     ],400);
                 }
 
-                if(!Schema::connection($this->connection)->hasTable($table)){
+                unset($data['id']);
+
+                DB::connection($this->connection)
+                    ->table($table)
+                    ->where('id',$id)
+                    ->update($data);
+
+                return response()->json([
+                    "success"=>true,
+                    "message"=>"Data berhasil diupdate"
+                ]);
+            }
+
+            if($action == "delete"){
+
+                if(!$id){
                     return response()->json([
                         "success"=>false,
-                        "message"=>"Table tidak ditemukan"
-                    ],404);
+                        "message"=>"ID wajib diisi"
+                    ],400);
                 }
 
-                if($action=="create"){
-
-                    if(empty($data)){
-                        return response()->json([
-                            "success"=>false,
-                            "message"=>"Data tidak boleh kosong"
-                        ],400);
-                    }
-
-                    $columns = DB::connection($this->connection)
-                    ->select("
-                        SELECT COLUMN_NAME,
-                            IS_NULLABLE,
-                            DATA_TYPE,
-                            EXTRA
-                        FROM information_schema.columns
-                        WHERE table_schema=?
-                        AND table_name=?
-                    ",[
-                        DB::connection($this->connection)->getDatabaseName(),
-                        $table
-                    ]);
-
-                    $autoIncrement=false;
-
-                    foreach($columns as $col){
-
-                        if($col->COLUMN_NAME=="id" &&
-                        strpos($col->EXTRA,'auto_increment')!==false){
-
-                            $autoIncrement=true;
-                        }
-                    }
-
-                    if(!$autoIncrement){
-
-                        if(!isset($data['id'])){
-
-                            $lastId = DB::connection($this->connection)
-                                ->table($table)
-                                ->max('id');
-
-                            $data['id'] = $lastId ? $lastId+1 : 1;
-                        }
-
-                    }
-
-                    foreach($columns as $col){
-
-                        $name=$col->COLUMN_NAME;
-                        $nullable=$col->IS_NULLABLE;
-                        $type=$col->DATA_TYPE;
-
-
-                        if(!isset($data[$name]) && $nullable=="NO"){
-
-                            if($name=="id")
-                                continue;
-
-
-                            if(in_array($type,['int','bigint','decimal','float','double']))
-                                $data[$name]=0;
-
-
-                            elseif(in_array($type,['date']))
-                                $data[$name]='2000-01-01';
-
-
-                            else
-                                $data[$name]='-';
-
-                        }
-
-                    }
-
-                    DB::connection($this->connection)
-                        ->table($table)
-                        ->insert($data);
-
-
-                    return response()->json([
-                        "success"=>true,
-                        "message"=>"Data berhasil ditambahkan"
-                    ]);
-
-                }
-
-                if($action=="update"){
-
-                    if(!$id){
-
-                        return response()->json([
-                            "success"=>false,
-                            "message"=>"ID wajib diisi"
-                        ],400);
-
-                    }
-
-
-                    DB::connection($this->connection)
-                        ->table($table)
-                        ->where('id',$id)
-                        ->update($data);
-
-
-                    return response()->json([
-                        "success"=>true,
-                        "message"=>"Data berhasil diupdate"
-                    ]);
-
-                }
-
-                if($action=="delete"){
-
-                    if(!$id){
-
-                        return response()->json([
-                            "success"=>false,
-                            "message"=>"ID wajib diisi"
-                        ],400);
-
-                    }
-
-
-                    DB::connection($this->connection)
-                        ->table($table)
-                        ->where('id',$id)
-                        ->delete();
-
-
-                    return response()->json([
-                        "success"=>true,
-                        "message"=>"Data berhasil dihapus"
-                    ]);
-
-                }
+                DB::connection($this->connection)
+                    ->table($table)
+                    ->where('id',$id)
+                    ->delete();
 
                 return response()->json([
-                    "success"=>false,
-                    "message"=>"Action tidak dikenal"
-                ],400);
-
-            } catch (\Throwable $e){
-
-                return response()->json([
-                    "success"=>false,
-                    "message"=>$e->getMessage()
-                ],500);
-
+                    "success"=>true,
+                    "message"=>"Data berhasil dihapus"
+                ]);
             }
+
+
+            return response()->json([
+                "success"=>false,
+                "message"=>"Action tidak dikenal"
+            ],400);
+
+
+        } catch (\Throwable $e){
+
+            Log::error("crudDapot error : ".$e->getMessage());
+
+            return response()->json([
+                "success"=>false,
+                "message"=>$e->getMessage()
+            ],500);
+
         }
+    }
+
     public function updateDatapotensi(Request $request, $table)
     {
         try {
