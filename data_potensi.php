@@ -114,7 +114,7 @@ class data_potensi extends Controller
 
             return response()->json([
                 'message' => 'success',
-                'data_potensi_list' => $summary,
+                'data_potesi_list' => $summary,
                 'datapotensi' => $detail
             ]);
 
