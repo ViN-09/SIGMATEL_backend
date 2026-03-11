@@ -146,7 +146,8 @@ class ProfilesController extends Controller
                 ],
 
                 "inrow" => [
-                    "jumlah" => count($inrow)
+                    "jumlah" => count($inrow),
+                    "ac" => $inrow
                 ]
 
             ],
@@ -169,91 +170,109 @@ class ProfilesController extends Controller
         ];
     }
     private function getUPSProfile()
-    {
-        $rows = $this->safeGet('dp_ups');
-        if ($rows->count() < 1) return null;
-
-        $totalCapacity = 0;
-        $totalLoad = 0;
-        $totalBank = 0;
-        $totalAh = 0;
-        $totalBatteryCap = 0;
-        $totalBatteryQty = 0;
-        $totalNE = 0;
-
-        foreach ($rows as $r) {
-
-            $totalCapacity += is_numeric($r->capacity_ups_kva ?? null)
-                ? (float)$r->capacity_ups_kva : 0;
-
-            $totalLoad += is_numeric($r->load_ups_kva ?? null)
-                ? (float)$r->load_ups_kva : 0;
-
-            $totalBank += is_numeric($r->total_bank ?? null)
-                ? (float)$r->total_bank : 0;
-
-            $totalAh += is_numeric($r->ah ?? null)
-                ? (float)$r->ah : 0;
-
-            $totalBatteryCap += is_numeric($r->battery_cap ?? null)
-                ? (float)$r->battery_cap : 0;
-
-            $totalBatteryQty += is_numeric($r->qt_battery ?? null)
-                ? (float)$r->qt_battery : 0;
-
-            $totalNE += is_numeric($r->jumlah_ne ?? null)
-                ? (float)$r->jumlah_ne : 0;
-        }
-
-        $occupancy = 0;
-
-        if ($totalCapacity > 0) {
-            $occupancy = round(($totalLoad / $totalCapacity) * 100,2);
-        }
+{
 
 
-        return [
+    $rows = $this->safeGet('dp_ups');
+    if ($rows->count() < 1) return null;
 
-            "total_capacity" => round($totalCapacity,2),
+    $totalBank = 0;
+    $totalAh = 0;
+    $totalBatteryCap = 0;
+    $totalBatteryQty = 0;
 
-            "total_load" => round($totalLoad,2),
+    foreach ($rows as $r) {
 
-            "total_bank" => (int)$totalBank,
+        $totalBank += is_numeric($r->total_bank ?? null)
+            ? (float)$r->total_bank : 0;
 
-            "total_ah" => round($totalAh,2),
+        $totalAh += is_numeric($r->ah ?? null)
+            ? (float)$r->ah : 0;
 
-            "total_battery_cap" => round($totalBatteryCap,2),
+        $totalBatteryCap += is_numeric($r->battery_cap ?? null)
+            ? (float)$r->battery_cap : 0;
 
-            "qt_battery" => (int)$totalBatteryQty,
-
-            "occupancy" => $occupancy,
-
-            "total_ne" => (int)$totalNE,
-
-            "total_system" => $rows->count()
-
-        ];
+        $totalBatteryQty += is_numeric($r->qt_battery ?? null)
+            ? (float)$r->qt_battery : 0;
     }
 
-private function getRECTProfile()
-{
-    $rows = $this->safeGet('dp_rectifier');
-    if ($rows->count() < 1) return null;
+
+    $tables = ['ups1','ups2'];
 
     $totalCapacity = 0;
     $totalLoad = 0;
+
+    foreach ($tables as $table) {
+
+        $latest = DB::table($table)
+                    ->orderBy('id','desc')
+                    ->first();
+
+        if (!$latest) continue;
+
+        $totalCapacity += is_numeric($latest->type ?? null)
+            ? (float)$latest->type : 0;
+
+        $totalLoad += is_numeric($latest->kva ?? null)
+            ? (float)$latest->kva : 0;
+    }
+
+
+    $occupancy = 0;
+
+    if ($totalCapacity > 0 && $totalLoad > 0) {
+
+        $occupancy = round(
+            ($totalLoad / $totalCapacity) * 100,
+            2
+        );
+
+        if ($occupancy > 100) {
+            $occupancy = 100;
+        }
+    }
+
+
+    $totalNE = $rows->count();
+    $totalSystem = $rows->count();
+
+
+    return [
+
+        "total_capacity" => round($totalCapacity,2),
+
+        "total_load" => round($totalLoad,2),
+
+        "total_bank" => (int)$totalBank,
+
+        "total_ah" => round($totalAh,2),
+
+        "total_battery_cap" => round($totalBatteryCap,2),
+
+        "qt_battery" => (int)$totalBatteryQty,
+
+        "occupancy" => $occupancy,
+
+        "total_ne" => $totalNE,
+
+        "total_system" => $totalSystem
+
+    ];
+}
+
+private function getRECTProfile()
+{
+
+
+    $rows = $this->safeGet('dp_rectifier');
+    if ($rows->count() < 1) return null;
+
     $totalBank = 0;
     $totalAh = 0;
     $totalBatteryCap = 0;
     $totalNE = 0;
 
     foreach ($rows as $r) {
-
-        $totalCapacity += is_numeric($r->rec_capacity ?? null)
-            ? (float)$r->rec_capacity : 0;
-
-        $totalLoad += is_numeric($r->total_load ?? null)
-            ? (float)$r->total_load : 0;
 
         $totalBank += is_numeric($r->jumlah_bank ?? null)
             ? (float)$r->jumlah_bank : 0;
@@ -264,14 +283,48 @@ private function getRECTProfile()
         $totalBatteryCap += is_numeric($r->battery_cap ?? null)
             ? (float)$r->battery_cap : 0;
 
-        $totalNE += is_numeric($r->jumlah_ne ?? null)
-            ? (float)$r->jumlah_ne : 0;
+        $totalNE = $rows->count();
     }
+
+
+    $tables = ['rec1','rec2','rec3','rec4'];
+
+    $totalCapacity = 0;
+    $totalLoad = 0;
+    $totalSystem = 0;
+
+    foreach ($tables as $table) {
+
+        $latest = DB::table($table)
+                    ->orderBy('id','desc')
+                    ->first();
+
+        if (!$latest) {
+            continue;
+        }
+
+        $totalSystem++;
+
+        $totalCapacity += is_numeric($latest->BebanTotal ?? null)
+            ? (float)$latest->BebanTotal : 0;
+
+        $totalLoad += is_numeric($latest->TotalLoad ?? null)
+            ? (float)$latest->TotalLoad : 0;
+    }
+
 
     $occupancy = 0;
 
-    if ($totalCapacity > 0) {
-        $occupancy = round(($totalLoad / $totalCapacity) * 100, 2);
+    if ($totalCapacity > 0 && $totalLoad > 0) {
+
+        $occupancy = round(
+            ($totalLoad / $totalCapacity) * 100,
+            2
+        );
+
+        if ($occupancy > 100) {
+            $occupancy = 100;
+        }
     }
 
 
@@ -289,30 +342,74 @@ private function getRECTProfile()
 
         "occupancy" => $occupancy,
 
-        "total_ne" => $totalNE > 0 ? (int)$totalNE : $rows->count(),
+        "total_ne" => (int)$totalNE,
 
-        "total_system" => $rows->count()
+        "total_system" => $totalSystem
 
     ];
 }
     private function getPLNProfile()
-    {
-        $rows = $this->safeGet('dp_power');
-        if ($rows->count() < 1) return null;
+{
 
-        $row = $rows->first();
 
-        return [
-            "kapasitas" => $row->capacity_kva ?? null,
-            "kapasitas_terpakai" => $row->load_kva ?? null,
-            "occupancy" => (is_numeric($row->capacity_kva ?? null) && (float)$row->capacity_kva > 0)
-                ? round(((float)$row->load_kva / (float)$row->capacity_kva) * 100, 2)
-                : 0,
-            "supply" => $row->operation_aging_kva_pln ?? null,
-            "tagihan_listrik" => $row->keterangan ?? null,
-        ];
+    $rows = $this->safeGet('dp_power');
+    if ($rows->count() < 1) return null;
+
+    $row = $rows->first();
+
+    $kapasitas = is_numeric($row->capacity_kva ?? null)
+        ? (float)$row->capacity_kva : 0;
+
+
+
+    $tables = [
+    'report_lvmdp1' => 'id_report_lvmdp1',
+    'report_lvmdp2' => 'id_report_lvmdp2'
+];
+
+$kapasitasTerpakai = 0;
+
+foreach ($tables as $table => $idColumn) {
+
+    $latest = DB::table($table)
+                ->orderBy($idColumn,'desc')
+                ->first();
+
+    if (!$latest) continue;
+
+    $kapasitasTerpakai += is_numeric($latest->kw ?? null)
+        ? (float)$latest->kw : 0;
+}
+
+    $occupancy = 0;
+
+    if ($kapasitas > 0 && $kapasitasTerpakai > 0) {
+
+        $occupancy = round(
+            ($kapasitasTerpakai / $kapasitas) * 100,
+            2
+        );
+
+        if ($occupancy > 100) {
+            $occupancy = 100;
+        }
     }
 
+
+    return [
+
+        "kapasitas" => $kapasitas,
+
+        "kapasitas_terpakai" => round($kapasitasTerpakai,2),
+
+        "occupancy" => $occupancy,
+
+        "supply" => $row->operation_aging_kva_pln ?? null,
+
+        "tagihan_listrik" => $row->keterangan ?? null,
+
+    ];
+}
     private function getTRAFOProfile()
     {
         $rows = $this->safeGet('dp_trafo');
@@ -342,7 +439,7 @@ private function getRECTProfile()
 {
     $rows = DB::connection($this->connection)
         ->table('dp_genset')
-        ->orderBy('id','asc')   // ⬅ GANTI INI
+        ->orderBy('id','asc')  
         ->get();
 
     if ($rows->count() < 1) return null;
@@ -364,86 +461,63 @@ private function getRECTProfile()
 }
 
     private function getBBMProfile()
-    {
-        try {
+{
+    try {
 
-            $g1 = DB::connection($this->connection)->table('genset1')->orderByDesc('id')->first();
-            $g2 = DB::connection($this->connection)->table('genset2')->orderByDesc('id')->first();
+        $g1 = DB::connection($this->connection)
+            ->table('genset1')
+            ->orderByDesc('id')
+            ->first();
 
-            if (!$g1 && !$g2) return null;
+        $g2 = DB::connection($this->connection)
+            ->table('genset2')
+            ->orderByDesc('id')
+            ->first();
 
-            $kapasitas = 12000;
+        if (!$g1 && !$g2) return null;
 
-            $cmToLiterHarian = function ($h) {
-                if ($h === null || !is_numeric($h)) return 0;
+        $kapasitas = 12000;
 
-                $R = 60;
-                $L = 220;
+        $tangkiHarian1 = 0;
+        $tangkiHarian2 = 0;
+        $tankiBulanan = 0;
 
-                if ($h <= 0) return 0;
-                if ($h >= (2 * $R)) $h = 2 * $R;
+        if ($g1) {
+            $tangkiHarian1 = is_numeric($g1->tangki_harian ?? null)
+                ? (float)$g1->tangki_harian : 0;
 
-                $part1 = $R * $R * acos(($R - $h) / $R);
-                $part2 = ($R - $h) * sqrt((2 * $R * $h) - ($h * $h));
-
-                $V = ($part1 - $part2) * $L;
-                return round($V / 1000, 2);
-            };
-
-            $cmToLiterBulanan = function ($h) {
-                if ($h === null || !is_numeric($h)) return 0;
-
-                $R = 60;
-                $L = 220;
-                $a = 30;
-
-                if ($h <= 0) return 0;
-                if ($h >= (2 * $R)) $h = 2 * $R;
-
-                $part1 = $R * $R * acos(($R - $h) / $R);
-                $part2 = ($R - $h) * sqrt((2 * $R * $h) - ($h * $h));
-
-                $V = ($part1 - $part2) * ($L + (2 * $a / (3 * $R)));
-                return round($V / 1000, 2);
-            };
-
-            $literBulanan = 0;
-            $literHarian1 = 0;
-            $literHarian2 = 0;
-
-            if ($g1) {
-                $literBulanan = $cmToLiterBulanan($g1->tanki_bulanan ?? 0);
-                $literHarian1 = $cmToLiterHarian($g1->tangki_harian ?? 0);
-            }
-
-            if ($g2) {
-                $literHarian2 = $cmToLiterHarian($g2->tangki_harian ?? 0);
-            }
-
-            $literTotal = round($literBulanan + $literHarian1 + $literHarian2, 2);
-
-            $occupancy = 0;
-            if ($kapasitas > 0) {
-                $occupancy = round(($literTotal / $kapasitas) * 100, 2);
-            }
-
-            $literPerJam = 50;
-
-            $backupTime = 0;
-            if ($literPerJam > 0) {
-                $backupTime = round($literTotal / $literPerJam, 2);
-            }
-
-            return [
-                "kapasitas" => (int)$kapasitas,
-                "liter_total" => $literTotal,
-                "occupancy" => $occupancy,
-                "backup_time" => $backupTime
-            ];
-        } catch (\Throwable $e) {
-            return null;
+            $tankiBulanan = is_numeric($g1->tanki_bulanan ?? null)
+                ? (float)$g1->tanki_bulanan : 0;
         }
+
+        if ($g2) {
+            $tangkiHarian2 = is_numeric($g2->tangki_harian ?? null)
+                ? (float)$g2->tangki_harian : 0;
+        }
+
+        $literTotal = round($tangkiHarian1 + $tangkiHarian2 + $tankiBulanan, 2);
+
+        $occupancy = 0;
+        if ($kapasitas > 0) {
+            $occupancy = round(($literTotal / $kapasitas) * 100, 2);
+        }
+
+        $backupTime = 0;
+        if ($literTotal > 0) {
+            $backupTime = round($literTotal / 35, 2);
+        }
+
+        return [
+            "kapasitas" => (int)$kapasitas,
+            "liter_total" => $literTotal,
+            "occupancy" => $occupancy,
+            "backup_time" => $backupTime
+        ];
+
+    } catch (\Throwable $e) {
+        return null;
     }
+}
 
     private function getSPACEProfile()
 {
@@ -454,43 +528,64 @@ private function getRECTProfile()
     $spacePerangkat = 0;
     $spaceCommon = 0;
     $totalRuangPerangkat = 0;
-    $lantaiMap = [];
+
+    $lantaiRuang = [];
+    $lantaiSpace = [];
 
     foreach ($rows as $r) {
 
-        $totalSpace += is_numeric($r->luas_m2 ?? null) ? (float)$r->luas_m2 : 0;
-        $spacePerangkat += is_numeric($r->terpakai_m2 ?? null) ? (float)$r->terpakai_m2 : 0;
-        $spaceCommon += is_numeric($r->tidakterpakai_m2 ?? null) ? (float)$r->tidakterpakai_m2 : 0;
+        $luas = is_numeric($r->luas_m2 ?? null) ? (float)$r->luas_m2 : 0;
+        $terpakai = is_numeric($r->terpakai_m2 ?? null) ? (float)$r->terpakai_m2 : 0;
+        $tidakTerpakai = is_numeric($r->tidakterpakai_m2 ?? null) ? (float)$r->tidakterpakai_m2 : 0;
+
+        $totalSpace += $luas;
+        $spacePerangkat += $terpakai;
+        $spaceCommon += $tidakTerpakai;
 
         if (!empty($r->Ruang)) {
             $totalRuangPerangkat++;
         }
 
         $lantai = $r->Lantai ?? null;
+
         if ($lantai) {
-            if (!isset($lantaiMap[$lantai])) {
-                $lantaiMap[$lantai] = 0;
+
+            if (!isset($lantaiRuang[$lantai])) {
+                $lantaiRuang[$lantai] = 0;
             }
-            $lantaiMap[$lantai]++;
+
+            if (!isset($lantaiSpace[$lantai])) {
+                $lantaiSpace[$lantai] = 0;
+            }
+
+            $lantaiRuang[$lantai]++;
+            $lantaiSpace[$lantai] += $luas;
         }
     }
 
-    $totalRuanganLantai = [];
-    foreach ($lantaiMap as $lantai => $jumlah) {
-        $totalRuanganLantai["total_ruangan_lantai_" . $lantai] = $jumlah;
-    }
-
     $data = [
-        "total_space" => round($totalSpace, 2),
-        "space_perangkat" => round($spacePerangkat, 2),
-        "space_common_area" => round($spaceCommon, 2),
+        "total_space" => round($totalSpace,2),
+        "space_perangkat" => round($spacePerangkat,2),
+        "space_common_area" => round($spaceCommon,2),
         "total_ruang_perangkat" => (int)$totalRuangPerangkat,
         "total_common_area" => (int)$rows->count(),
     ];
 
-    $data = array_merge($data, $totalRuanganLantai);
+    for ($i=1;$i<=3;$i++) {
 
-    $data["total_ruangan"] = (int)$rows->count(); 
+        $data["total_space_lantai_$i"] =
+            isset($lantaiSpace[$i]) ? round($lantaiSpace[$i],2) : 0;
+
+    }
+
+    for ($i=1;$i<=3;$i++) {
+
+        $data["total_ruangan_lantai_$i"] =
+            isset($lantaiRuang[$i]) ? $lantaiRuang[$i] : 0;
+
+    }
+
+    $data["total_ruangan"] = (int)$rows->count();
 
     return $data;
 }
@@ -544,7 +639,7 @@ private function getRECTProfile()
         foreach ($rows as $r) {
             $status = strtolower(trim($r->Status ?? ''));
 
-            if ($status === 'aktif') $aktif++;
+            if ($status === 'service') $aktif++;
             else $tidakAktif++;
 
             if (!empty($r->Brand)) $brands[] = $r->Brand;
