@@ -14,6 +14,7 @@ use App\Http\Controllers\ttc_paniki_controllers\VisitorsController; // Import Vi
 use App\Http\Controllers\ttc_paniki_controllers\UserController;
 use App\Http\Controllers\ttc_paniki_controllers\ProfilesController;
 use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
+use App\Http\Controllers\ttc_paniki_controllers\IssueController;
 
 
 
@@ -58,4 +59,6 @@ Route::prefix('ttc_paniki')->group(function () {
     '/checklist2/requestTableStructure/{form}',
     [RequestTableStructureController::class, 'requestTableStructure']
     );
+
+    Route::get('/issues', [IssueController::class, 'index']);
 });
