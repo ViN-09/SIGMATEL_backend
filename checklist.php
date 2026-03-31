@@ -4,7 +4,9 @@ namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class checklist extends Controller
 {
@@ -221,29 +223,29 @@ class checklist extends Controller
         ]);
     }
 
-    public function pullReport($id, $jenis)
-    {
-        $id = (int)$id;
+public function pullReport($id, $jenis)
+{
+    $id = (int)$id;
 
-        $info = DB::connection($this->connection)
-            ->table('report_info')
-            ->where('no_report', $id)
-            ->first();
+    $info = DB::connection($this->connection)
+        ->table('report_info')
+        ->where('no_report', $id)
+        ->first();
 
-        if (!$info) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Report tidak ditemukan'
-            ]);
-        }
-
-        $genset = $this->getGensetByReportDate($info->date_time);
-
+    if (!$info) {
         return response()->json([
-            'success' => true,
-            'data' => [
+            'success' => false,
+            'message' => 'Report tidak ditemukan'
+        ]);
+    }
 
-                'genset' => $genset,
+    $genset = $this->getGensetByReportDate($info->date_time);
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+
+            'genset' => $genset,
 
             'report_info' => [
                 'petugasME'       => $this->getPetugasName($info->petugasME),
@@ -261,41 +263,126 @@ class checklist extends Controller
                 'date_time'       => $info->date_time,
             ],
 
-                'report_kwh'    => $this->safeTableFirst('report_kwh', 'id_report_kwh', $id),
-                'report_suhu'   => $this->safeTableFirst('report_suhu', 'id_report_suhu', $id),
-                'trafof_c'      => $this->safeTableFirst('trafof_c', 'id', $id),
-                'report_lvmdp1' => $this->safeTableFirst('report_lvmdp1', 'id_report_lvmdp1', $id),
-                'report_lvmdp2' => $this->safeTableFirst('report_lvmdp2', 'id_report_lvmdp2', $id),
-                'load_trafo'    => $this->safeTableFirst('load_trafo', 'id', $id),
+            'report_kwh'    => $this->safeTableFirst('report_kwh', 'id_report_kwh', $id),
+            'report_suhu'   => $this->safeTableFirst('report_suhu', 'id_report_suhu', $id),
+            'trafof_c'      => $this->safeTableFirst('trafof_c', 'id', $id),
+            'report_lvmdp1' => $this->safeTableFirst('report_lvmdp1', 'id_report_lvmdp1', $id),
+            'report_lvmdp2' => $this->safeTableFirst('report_lvmdp2', 'id_report_lvmdp2', $id),
+            'load_trafo'    => $this->safeTableFirst('load_trafo', 'id', $id),
 
-                'rec1' => $this->safeTableFirst('rec1', 'id', $id),
-                'rec2' => $this->safeTableFirst('rec2', 'id', $id),
-                'rec3' => $this->safeTableFirst('rec3', 'id', $id),
-                'rec4' => $this->safeTableFirst('rec4', 'id', $id),
+            'rec1' => $this->safeTableFirst('rec1', 'id', $id),
+            'rec2' => $this->safeTableFirst('rec2', 'id', $id),
+            'rec3' => $this->safeTableFirst('rec3', 'id', $id),
+            'rec4' => $this->safeTableFirst('rec4', 'id', $id),
 
-                'ups1' => $this->safeTableFirst('ups1', 'id', $id),
-                'ups2' => $this->safeTableFirst('ups2', 'id', $id),
+            'ups1' => $this->safeTableFirst('ups1', 'id', $id),
+            'ups2' => $this->safeTableFirst('ups2', 'id', $id),
 
-                'dcpdu_1' => $this->safeTableFirst('dcpdu_1', 'id', $id),
-                'dcpdu_2' => $this->safeTableFirst('dcpdu_2', 'id', $id),
-                'dcpdu_3' => $this->safeTableFirst('dcpdu_3', 'id', $id),
+            'dcpdu_1' => $this->safeTableFirst('dcpdu_1', 'id', $id),
+            'dcpdu_2' => $this->safeTableFirst('dcpdu_2', 'id', $id),
+            'dcpdu_3' => $this->safeTableFirst('dcpdu_3', 'id', $id),
 
-                'pac1'  => $this->safeTableFirst('pac1', 'id', $id),
-                'pac2'  => $this->safeTableFirst('pac2', 'id', $id),
-                'pac3'  => $this->safeTableFirst('pac3', 'id', $id),
-                'pac4'  => $this->safeTableFirst('pac4', 'id', $id),
-                'pac5'  => $this->safeTableFirst('pac5', 'id', $id),
-                'pac6'  => $this->safeTableFirst('pac6', 'id', $id),
-                'pac7'  => $this->safeTableFirst('pac7', 'id', $id),
-                'pac8'  => $this->safeTableFirst('pac8', 'id', $id),
-                'pac9'  => $this->safeTableFirst('pac9', 'id', $id),
-                'pac10' => $this->safeTableFirst('pac10', 'id', $id),
-                'pac11' => $this->safeTableFirst('pac11', 'id', $id),
-                'pac12' => $this->safeTableFirst('pac12', 'id', $id),
-                'pac13' => $this->safeTableFirst('pac13', 'id', $id),
-                'pac14' => $this->safeTableFirst('pac14', 'id', $id),
-                'pac15' => $this->safeTableFirst('pac15', 'id', $id),
-            ]
+            'pac1'  => $this->safeTableFirst('pac1', 'id', $id),
+            'pac2'  => $this->safeTableFirst('pac2', 'id', $id),
+            'pac3'  => $this->safeTableFirst('pac3', 'id', $id),
+            'pac4'  => $this->safeTableFirst('pac4', 'id', $id),
+            'pac5'  => $this->safeTableFirst('pac5', 'id', $id),
+            'pac6'  => $this->safeTableFirst('pac6', 'id', $id),
+            'pac7'  => $this->safeTableFirst('pac7', 'id', $id),
+            'pac8'  => $this->safeTableFirst('pac8', 'id', $id),
+            'pac9'  => $this->safeTableFirst('pac9', 'id', $id),
+            'pac10' => $this->safeTableFirst('pac10', 'id', $id),
+            'pac11' => $this->safeTableFirst('pac11', 'id', $id),
+            'pac12' => $this->safeTableFirst('pac12', 'id', $id),
+            'pac13' => $this->safeTableFirst('pac13', 'id', $id),
+            'pac14' => $this->safeTableFirst('pac14', 'id', $id),
+            'pac15' => $this->safeTableFirst('pac15', 'id', $id),
+        ]
+    ]);
+}
+
+    public function cereateReportID(Request $request)
+    {
+        $no_report = rand(1000,9999); // sementara
+
+        return response()->json([
+            "no_report" => $no_report,
+            "report_type" => $request->jenis_report ?? "Ceklist"
         ]);
     }
+
+public function createReport(Request $request)
+{
+    try {
+        $data = $request->all();
+        $noReport = $data['no_report'] ?? null;
+
+        foreach ($data as $category => $tables) {
+
+            // skip field bukan data tabel
+            if (in_array($category, ['no_report', 'report_type'])) continue;
+
+            // pastikan category berisi array tabel
+            if (!is_array($tables)) continue;
+
+            foreach ($tables as $table => $fields) {
+
+                // skip kalau bukan array
+                if (!is_array($fields) || empty($fields)) continue;
+
+                // inject id sesuai tabel
+                if ($noReport) {
+
+                    if (in_array($table, ['report_kwh'])) {
+                        $fields['id_report_kwh'] = $noReport;
+
+                    } elseif (in_array($table, ['report_suhu'])) {
+                        $fields['id_report_suhu'] = $noReport;
+
+                    } elseif (in_array($table, ['report_lvmdp1'])) {
+                        $fields['id_report_lvmdp1'] = $noReport;
+
+                    } elseif (in_array($table, ['report_lvmdp2'])) {
+                        $fields['id_report_lvmdp2'] = $noReport;
+
+                    } else {
+                        // default pakai id
+                        $fields['id'] = $noReport;
+                    }
+                }
+
+                try {
+                    DB::connection($this->connection)
+                        ->table($table)
+                        ->insert($fields);
+
+                    Log::info("✅ Insert berhasil ke $table");
+
+                } catch (\Throwable $e) {
+                    Log::error("❌ Insert gagal ke $table: " . $e->getMessage());
+
+                    return response()->json([
+                        "success" => false,
+                        "error" => $e->getMessage(),
+                        "table" => $table
+                    ], 500);
+                }
+            }
+        }
+
+        return response()->json([
+            "success" => true,
+            "message" => "Semua data berhasil disimpan"
+        ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error("🔥 ERROR createReport: " . $e->getMessage());
+
+        return response()->json([
+            "success" => false,
+            "message" => $e->getMessage()
+        ], 500);
+    }
+}
 }
