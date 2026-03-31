@@ -16,7 +16,7 @@ use App\Http\Controllers\ttc_paniki_controllers\ProfilesController;
 use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
 use App\Http\Controllers\ttc_paniki_controllers\IssueController;
 
-
+Route::get('/user/stafflist/{site}/{jabatan}', [UserController::class, 'staffList']);
 
 /////////////////////////////////////////////////////////////////////////////Paniki/////////////////////////////////////////////////////////////////////////////////////////
 Route::prefix('ttc_paniki')->group(function () {
@@ -28,7 +28,11 @@ Route::prefix('ttc_paniki')->group(function () {
     Route::prefix('checklist2')->group(function () {
         Route::get('/dialyActivityList/{ym}', [CheckListPaniki2::class, 'dialyActivityListByMonth']);
         Route::get('/pullreport/{id}/{type}', [CheckListPaniki2::class, 'pullReport']);
-        Route::get('dialyActivityList', [CheckListPaniki2::class, 'dialyActivityList']);
+        Route::get('/dialyActivityList', [CheckListPaniki2::class, 'dialyActivityList']);
+        Route::post('/cereateReportID', [CheckListPaniki2::class, 'cereateReportID']);
+        Route::post('/cereateReport', [CheckListPaniki2::class, 'createReport']);
+
+        Route::get('/requestTableStructure/{form}', [RequestTableStructureController::class, 'requestTableStructure']);
     });
 
     Route::prefix('summary_pue')->group(function () {
