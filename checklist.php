@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class checklist extends Controller
 {
@@ -301,71 +302,106 @@ public function pullReport($id, $jenis)
     ]);
 }
 
-    public function cereateReportID(Request $request)
-    {
-        $no_report = rand(1000,9999); // sementara
+public function cereateReportID(Request $request)
+{
+    try {
 
-        return response()->json([
-            "no_report" => $no_report,
-            "report_type" => $request->jenis_report ?? "Ceklist"
-        ]);
-    }
+        $data = $request->all();
+
+        Log::info("DATA cereateReportID:", $data);
+
+        $last = DB::connection($this->connection)
+            ->table('report_info')
+            ->max('no_report');
+
+        $no_report = $last ? $last + 1 : 1001;
+
+        $reportInfo = $data['report_info'] ?? [];
+
+        DB::connection($this->connection)
+            ->table('report_info')
+            ->insert([
+                'no_report'    => $no_report,
+
+                'petugasME1'   => $reportInfo['petugasME'] ?? null,
+                'petugasME2'   => $reportInfo['petugasME2'] ?? null,
+                'petugasME3'   => $reportInfo['petugasME3'] ?? null,
+                'petugasME4'   => $reportInfo['petugasME4'] ?? null,
+
+                'jenis_report' => $reportInfo['jenis_report'] ?? 'Ceklist',
+                'date_time'    => now(),
+                'status'       => null
+            ]);
+
+                return response()->json([
+                    "no_report"   => $no_report,
+                    "report_type" => $reportInfo['jenis_report'] ?? "Ceklist"
+                ]);
+
+            } catch (\Throwable $e) {
+
+                Log::error("ERROR cereateReportID: " . $e->getMessage());
+
+                return response()->json([
+                    "success" => false,
+                    "message" => $e->getMessage()
+                ], 500);
+            }
+        }
 
 public function createReport(Request $request)
 {
     try {
+
         $data = $request->all();
         $noReport = $data['no_report'] ?? null;
 
-        foreach ($data as $category => $tables) {
+        if (!$noReport) {
+            return response()->json([
+                "success" => false,
+                "message" => "no_report tidak ditemukan"
+            ], 400);
+        }
 
-            // skip field bukan data tabel
-            if (in_array($category, ['no_report', 'report_type'])) continue;
+        Log::info("🔥 FULL PAYLOAD:", $data);
 
-            // pastikan category berisi array tabel
-            if (!is_array($tables)) continue;
+        $tableMap = [
+            'trafoc_c' => 'trafof_c',
+        ];
 
-            foreach ($tables as $table => $fields) {
+        foreach ($data as $key => $value) {
 
-                // skip kalau bukan array
-                if (!is_array($fields) || empty($fields)) continue;
+            if (in_array($key, ['no_report', 'report_type'])) {
+                continue;
+            }
 
-                // inject id sesuai tabel
-                if ($noReport) {
+            if (is_array($value) && array_keys($value) !== range(0, count($value) - 1)) {
 
-                    if (in_array($table, ['report_kwh'])) {
-                        $fields['id_report_kwh'] = $noReport;
+                $table = $key;
+                $fields = $value;
 
-                    } elseif (in_array($table, ['report_suhu'])) {
-                        $fields['id_report_suhu'] = $noReport;
-
-                    } elseif (in_array($table, ['report_lvmdp1'])) {
-                        $fields['id_report_lvmdp1'] = $noReport;
-
-                    } elseif (in_array($table, ['report_lvmdp2'])) {
-                        $fields['id_report_lvmdp2'] = $noReport;
-
-                    } else {
-                        // default pakai id
-                        $fields['id'] = $noReport;
-                    }
+                if (isset($tableMap[$table])) {
+                    $table = $tableMap[$table];
                 }
 
-                try {
-                    DB::connection($this->connection)
-                        ->table($table)
-                        ->insert($fields);
+                Log::info("➡️ DIRECT TABLE: $table", $fields);
 
-                    Log::info("✅ Insert berhasil ke $table");
+                $this->saveToTable($table, $fields, $noReport);
+            }
 
-                } catch (\Throwable $e) {
-                    Log::error("❌ Insert gagal ke $table: " . $e->getMessage());
+            if (is_array($value)) {
 
-                    return response()->json([
-                        "success" => false,
-                        "error" => $e->getMessage(),
-                        "table" => $table
-                    ], 500);
+                foreach ($value as $table => $fields) {
+
+                    if (!is_array($fields)) continue;
+
+                    if (isset($tableMap[$table])) {
+                        $table = $tableMap[$table];
+                    }
+
+                    Log::info("➡️ NESTED TABLE: $table", $fields);
+
+                    $this->saveToTable($table, $fields, $noReport);
                 }
             }
         }
@@ -383,6 +419,58 @@ public function createReport(Request $request)
             "success" => false,
             "message" => $e->getMessage()
         ], 500);
+    }
+}
+
+private function saveToTable($table, $fields, $noReport)
+{
+    try {
+
+        foreach ($fields as $k => $v) {
+            if ($v === null || $v === "null") {
+                $fields[$k] = "";
+            }
+        }
+
+        if (Schema::connection($this->connection)->hasColumn($table, 'id')) {
+
+            $fields['id'] = $noReport;
+            $key = ['id' => $noReport];
+
+        } elseif (Schema::connection($this->connection)->hasColumn($table, 'id_report_kwh')) {
+
+            $fields['id_report_kwh'] = $noReport;
+            $key = ['id_report_kwh' => $noReport];
+
+        } elseif (Schema::connection($this->connection)->hasColumn($table, 'id_report_suhu')) {
+
+            $fields['id_report_suhu'] = $noReport;
+            $key = ['id_report_suhu' => $noReport];
+
+        } elseif (Schema::connection($this->connection)->hasColumn($table, 'id_report_lvmdp1')) {
+
+            $fields['id_report_lvmdp1'] = $noReport;
+            $key = ['id_report_lvmdp1' => $noReport];
+
+        } elseif (Schema::connection($this->connection)->hasColumn($table, 'id_report_lvmdp2')) {
+
+            $fields['id_report_lvmdp2'] = $noReport;
+            $key = ['id_report_lvmdp2' => $noReport];
+
+        } else {
+
+            $key = $fields;
+        }
+
+        DB::connection($this->connection)
+            ->table($table)
+            ->updateOrInsert($key, $fields);
+
+        Log::info("✅ SUCCESS ke $table", $fields);
+
+    } catch (\Throwable $e) {
+
+        Log::error("❌ ERROR di tabel $table: " . $e->getMessage());
     }
 }
 }
