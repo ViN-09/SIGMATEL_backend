@@ -35,10 +35,9 @@ Route::prefix('user')->group(function () {
 Route::prefix('ttc_paniki')->group(function () {
 
     Route::prefix('data_potensi2')->group(function () {
-        Route::get('/fullDapot', [DataPotensi2Paniki::class, 'getAllDataPotensi']);
-        Route::post('/crudDapot', [DataPotensi2Paniki::class, 'crudDapot']);
+        Route::get('/fullDapot', [DataPotensi2Teling::class, 'fullDapot']);
+        Route::post('/crudDapot', [DataPotensi2Teling::class, 'crudDapot']);
     });
-
      Route::prefix('checklist2')->group(function () {
         Route::get('/dialyActivityList/{monthYear?}', [Fixedceklist::class, 'showDialyActivity']);
         Route::get('/pullreport/{id}/{type}', [Fixedceklist::class, 'getReport']);
