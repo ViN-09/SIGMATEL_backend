@@ -12,6 +12,26 @@ use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
 use App\Http\Controllers\ttc_paniki_controllers\DataDashboard as DataDashboard;
 use Illuminate\Support\Facades\Route;
 
+
+use App\Http\Controllers\user\login as loginall;
+use App\Http\Controllers\user\user as userall;
+use App\Http\Controllers\user\userrequest as userrequestall;
+
+
+Route::prefix('user')->group(function () {
+    Route::post('/login/try', [loginall::class, 'cekLogin']);
+    Route::get('/user/{id}', [userall::class, 'show']);
+    Route::get('/', [userall::class, 'index']);
+    Route::get('/{id}', [userall::class, 'show']);
+    Route::post('/', [userall::class, 'store']);
+    Route::put('/{id}', [userall::class, 'update']);
+    Route::delete('/{id}', [userall::class, 'destroy']);
+    Route::post('/cekpass', [userall::class, 'cekpass']);
+    Route::post('/{id}/update-password', [userall::class, 'updatePassword']);
+    Route::get('/stafflist/{site}/{jabatan}', [userrequestall::class, 'stafflist']);//
+
+});
+
 Route::prefix('ttc_paniki')->group(function () {
 
     Route::prefix('data_potensi2')->group(function () {
