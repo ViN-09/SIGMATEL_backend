@@ -323,7 +323,7 @@ public function cereateReportID(Request $request)
             ->insert([
                 'no_report'    => $no_report,
 
-                'petugasME1'   => $reportInfo['petugasME'] ?? null,
+                'petugasME'   => $reportInfo['petugasME'] ?? null,
                 'petugasME2'   => $reportInfo['petugasME2'] ?? null,
                 'petugasME3'   => $reportInfo['petugasME3'] ?? null,
                 'petugasME4'   => $reportInfo['petugasME4'] ?? null,

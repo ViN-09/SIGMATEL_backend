@@ -1,50 +1,57 @@
 <?php
 
-use App\Http\Controllers\ttc_paniki_controllers\checklist as CheckListPaniki2;
+//Controler Paniki
 use App\Http\Controllers\ttc_paniki_controllers\data_potensi as DataPotensi2Paniki;
-use App\Http\Controllers\ttc_paniki_controllers\ProfilesController;
+use App\Http\Controllers\ttc_paniki_controllers\checklist as CheckListPaniki2;
+use App\Http\Controllers\ttc_paniki_controllers\fixedCeklsit as Fixedceklist;
+use App\Http\Controllers\ttc_paniki_controllers\ProfilesController as resumePaniki;
+use App\Http\Controllers\ttc_paniki_controllers\VisitorsController as VisitorPaniki;
 use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
-use App\Http\Controllers\ttc_paniki_controllers\UserController;
-use App\Http\Controllers\ttc_paniki_controllers\VisitorsController;
-use App\Http\Controllers\ttc_paniki_controllers\VisitorLog;
+use App\Http\Controllers\ttc_paniki_controllers\IssueController as  IssuePaniki;
+use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
+use App\Http\Controllers\ttc_paniki_controllers\DataDashboard as DataDashboard;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('ttc_paniki')->group(function () {
 
-    Route::prefix('data_potensi')->group(function () {
+    Route::prefix('data_potensi2')->group(function () {
         Route::get('/fullDapot', [DataPotensi2Paniki::class, 'getAllDataPotensi']);
+        Route::post('/crudDapot', [DataPotensi2Paniki::class, 'crudDapot']);
     });
 
-    Route::prefix('checklist2')->group(function () {
-        Route::get('/dialyActivityList/{ym}', [CheckListPaniki2::class, 'dialyActivityListByMonth']);
-        Route::get('/pullreport/{id}/{type}', [CheckListPaniki2::class, 'pullReport']);
-        Route::get('/dialyActivityList', [CheckListPaniki2::class, 'dialyActivityList']);
+     Route::prefix('checklist2')->group(function () {
+        Route::get('/dialyActivityList/{monthYear?}', [Fixedceklist::class, 'showDialyActivity']);
+        Route::get('/pullreport/{id}/{type}', [Fixedceklist::class, 'getReport']);
+        Route::get('/requestTableStructure/{table}', [Fixedceklist::class, 'requestTableStructure']);
+        Route::get('/stafflist/{jabatan}', [Fixedceklist::class, 'stafflist']);//otw ganti
+        Route::post('/cereateReportID', [Fixedceklist::class, 'cereateReportID']);
+        Route::post('/cereateReport', [Fixedceklist::class, 'createReport']);
+
+    });
+
+       Route::prefix('data_potensi')->group(function () {
+        Route::get('/puedashboard/{tanggal}/{jenis}', [DataDashboard::class, 'puedatadashboard']);
     });
 
     Route::prefix('summary_pue')->group(function () {
         Route::get('/data_report/{type}/{startDate?}/{endDate?}', [SummaryPuePaniki::class, 'tableReportList']);
     });
 
-    // visitors
-    Route::post('/visitor/registry', [VisitorsController::class, 'registvisitor']);
-    Route::get('/visitor', [VisitorsController::class, 'index']);
-    Route::get('/visitor/waiting', [VisitorsController::class, 'waiting']);
-    Route::get('/visitor/completed', [VisitorsController::class, 'completed']);
-    Route::get('/visitor/visitor/completed', [VisitorsController::class, 'completed']);
-    Route::post('/visitor/{id}/update-status', [VisitorsController::class, 'updateStatus']);
-    Route::post('/visitor/visitors/{id}/update-status', [VisitorsController::class, 'updateStatus']);
+    Route::get('/profiles', [resumePaniki::class, 'profiles']);
+    Route::get('/hello', [resumePaniki::class, 'hello']);
 
-    // visitorlog
-    Route::prefix('visitorlog')->group(function () {
-        Route::get('/', [VisitorLog::class, 'getAllLogs']);
-        Route::get('/{username}', [VisitorLog::class, 'getLogsByUsername']);
-        Route::post('/', [VisitorLog::class, 'addLog']);
+    Route::prefix('visitor')->group(function () {
+        Route::post('/registry', [VisitorPaniki::class, 'registvisitor']);
+        Route::get('/waiting', [VisitorPaniki::class, 'waiting']);
+        Route::post('/visitors/{id}/update-status', [VisitorPaniki::class, 'updateStatus']);
+        Route::get('/visitors/completed', [VisitorPaniki::class, 'completed']);
     });
 
-    Route::prefix('user')->group(function () {
-        Route::get('/{id}', [UserController::class, 'show']);
+    Route::prefix('issue')->group(function () {
+        Route::get('/', [IssuePaniki::class, 'index']);
+        Route::post('/add', [IssuePaniki::class, 'store']);
+        Route::put('/update/{id}', [IssuePaniki::class, 'update']);
     });
 
-    Route::get('/stafflist/{jabatan}', [UserController::class, 'staffList']);
-    Route::get('/profiles', [ProfilesController::class, 'profiles']);
+
 });
