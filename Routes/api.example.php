@@ -10,6 +10,7 @@ use App\Http\Controllers\ttc_paniki_controllers\summary_pue as SummaryPuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\IssueController as  IssuePaniki;
 use App\Http\Controllers\ttc_paniki_controllers\RequestTableStructureController;
 use App\Http\Controllers\ttc_paniki_controllers\DataDashboard as DataDashboard;
+use App\Http\Controllers\ttc_paniki_controllers\monitoring as MonitoringPaniki;
 use Illuminate\Support\Facades\Route;
 
 
@@ -34,10 +35,11 @@ Route::prefix('user')->group(function () {
 
 Route::prefix('ttc_paniki')->group(function () {
 
-    Route::prefix('data_potensi2')->group(function () {
-        Route::get('/fullDapot', [DataPotensi2Teling::class, 'fullDapot']);
-        Route::post('/crudDapot', [DataPotensi2Teling::class, 'crudDapot']);
+     Route::prefix('monitoring')->group(function () {
+        Route::get('/data', [MonitoringPaniki::class, 'dataMonitoring']);
+        Route::get('/test', [MonitoringPaniki::class, 'generateDailyPUE']);
     });
+
      Route::prefix('checklist2')->group(function () {
         Route::get('/dialyActivityList/{monthYear?}', [Fixedceklist::class, 'showDialyActivity']);
         Route::get('/pullreport/{id}/{type}', [Fixedceklist::class, 'getReport']);
