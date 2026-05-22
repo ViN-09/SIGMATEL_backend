@@ -211,6 +211,7 @@ class fixedCeklsit extends Controller
             ->whereIn('jenis_report', ['Ceklist', 'KWH & Suhu', 'Genset1', 'Genset2'])
             ->whereMonth('date_time', $month)
             ->whereYear('date_time', $year)
+            ->where('status', 1)
             ->orderBy('date_time', 'desc')
             ->limit(200)
             ->get();
@@ -331,7 +332,7 @@ class fixedCeklsit extends Controller
                     $row->liter_harian = round($this->calculateHarian1($Tangki_harian)/1000,2);
                 } else {
                     $row->liter_bulanan = round($this->calculateBulanan2($Tangki_bulanan)/1000,2);
-                    $row->liter_harian = $this->calculateHarian2($Tangki_harian);
+                    $row->liter_harian = round($this->calculateHarian1($Tangki_harian)/1000,2);
                 }
 
                 return $row;
