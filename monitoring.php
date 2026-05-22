@@ -124,22 +124,33 @@ class Monitoring extends Controller
     // =====================
     public function suhu(): array
     {
-        $rooms = ['Trafo', 'Genset', 'Battery', 'Transmissi', 'RAN', 'Core', 'CRoom'];
+        $rooms = ['Trafo', 'Genset', 'Battery', 'Transmissi', 'RAN', 'Core', 'CRoom', 'NFVI'];
         $SuhuTemp = [];
 
         foreach ($rooms as $room) {
-            if (in_array($room, ['Trafo', 'Genset'])) {
-                $SuhuTemp[$room] = [
-                    'Suhu' => rand(29, 31),
-                    'Humidity' => rand(29, 31),
-                ];
-            } else {
-                $SuhuTemp[$room] = [
-                    'Suhu' => 24,
-                    'Humidity' => rand(40, 60),
-                ];
-            }
-        }
+
+    if (in_array($room, ['Trafo', 'Genset'])) {
+
+        $SuhuTemp[$room] = [
+            'Suhu' => rand(29, 31),
+            'Humidity' => rand(29, 31),
+        ];
+
+    } else if (in_array($room, ['NFVI'])) {
+
+        $SuhuTemp[$room] = [
+            'Suhu' => rand(20, 21),
+            'Humidity' => rand(29, 31),
+        ];
+
+    } else {
+
+        $SuhuTemp[$room] = [
+            'Suhu' => 24,
+            'Humidity' => rand(40, 60),
+        ];
+    }
+}
 
         return $SuhuTemp;
     }
