@@ -49,7 +49,6 @@ Route::prefix('ttc_paniki')->group(function () {
         Route::post('/cereateReport', [Fixedceklist::class, 'createReport']);
 
     });
-
        Route::prefix('data_potensi')->group(function () {
         Route::get('/puedashboard/{tanggal}/{jenis}', [DataDashboard::class, 'puedatadashboard']);
     });
