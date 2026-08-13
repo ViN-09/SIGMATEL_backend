@@ -17,7 +17,9 @@ class test extends Controller
         'kw_ups1','kva_ups1','kw_ups2','kva_ups2',
         'kw_rec1','kva_rec1','kw_rec2','kva_rec2',
         'kw_rec3','kva_rec3','kw_rec4','kva_rec4',
-        'total_kva_it_telco','total_load_it_telco','pue'
+        'total_kva_it_telco','total_load_it_telco','pue',
+        'r_lv1', 's_lv1', 't_lv1', 'r_lv2', 's_lv2', 't_lv2',
+        'a_rec1', 'a_rec2', 'a_rec3', 'a_rec4',
     ];
 
     public function post_test(Request $request)
@@ -43,7 +45,8 @@ class test extends Controller
             ->insert($data);
 
         return response()->json([
-            'message' => 'Data inserted successfully',
+            'message' => 'Data inserted successfullyyyy',
+            'to-check' => $request->only($this->fields),
             'data' => $data
         ]);
     }
