@@ -18,93 +18,60 @@ class fixedCeklsit extends Controller
 
     //Helper BBM
     private function calculateBulanan1($tinggi): float
-{
-    // Radius tangki
-    $r = 85.0;
+    {
+        // Radius tangki
+        $r = 85.0;
 
-    // Panjang silinder utama
-    $length = 413.0;
+        // Panjang silinder utama
+        $length = 413.0;
 
-    // Parameter head/end cap
-    $headLength = 20.0;
+        // Parameter head/end cap
+        $headLength = 20.0;
 
-    // Validasi sensor
-    $t = max(
-        0.0,
-        min((float) $tinggi, $r * 2)
-    );
+        // Validasi sensor
+        $t = max(
+            0.0,
+            min((float) $tinggi, $r * 2)
+        );
 
-    // Safety acos()
-    $acosInput = ($r - $t) / $r;
-    $acosInput = max(-1.0, min(1.0, $acosInput));
+        // Safety acos()
+        $acosInput = ($r - $t) / $r;
+        $acosInput = max(-1.0, min(1.0, $acosInput));
 
-    // Safety sqrt()
-    $sqrtInput = (2 * $r * $t) - ($t * $t);
-    $sqrtInput = max(0.0, $sqrtInput);
+        // Safety sqrt()
+        $sqrtInput = (2 * $r * $t) - ($t * $t);
+        $sqrtInput = max(0.0, $sqrtInput);
 
-    // Segment volume (silinder utama)
-    $segment =
-        ($r * $r * acos($acosInput))
-        -
-        (($r - $t) * sqrt($sqrtInput));
+        // Segment volume (silinder utama)
+        $segment =
+            ($r * $r * acos($acosInput))
+            -
+            (($r - $t) * sqrt($sqrtInput));
 
-    // Volume silinder utama
-    $mainVolume = $segment * $length;
+        // Volume silinder utama
+        $mainVolume = $segment * $length;
 
-    // Volume tambahan (head / end cap)
-    $volumeTambahan =
-        (pi() * $headLength * (3 * $r - $t) * $t * $t)
-        / (3 * $r);
+        // Volume tambahan (head / end cap)
+        $volumeTambahan =
+            (pi() * $headLength * (3 * $r - $t) * $t * $t)
+            / (3 * $r);
 
-    // Total volume
-    $total = $mainVolume + $volumeTambahan;
+        // Total volume
+        $total = $mainVolume + $volumeTambahan;
 
-    return round($total, 2);
-}
+        return round($total, 2);
+    }
 
     private function calculateBulanan2($tinggi): float
     {
-        // Radius tangki
-    $r = 85.0;
+        // Kapasitas penuh tangki = 10.000 liter
+        $kapasitas = 10000.0;
 
-    // Panjang silinder utama
-    $length = 413.0;
+        // Nilai sensor dianggap sebagai persentase 0–100%
+        $persen = max(0.0, min((float) $tinggi, 100.0));
 
-    // Parameter head/end cap
-    $headLength = 20.0;
-
-    // Validasi sensor
-    $t = max(
-        0.0,
-        min((float) $tinggi, $r * 2)
-    );
-
-    // Safety acos()
-    $acosInput = ($r - $t) / $r;
-    $acosInput = max(-1.0, min(1.0, $acosInput));
-
-    // Safety sqrt()
-    $sqrtInput = (2 * $r * $t) - ($t * $t);
-    $sqrtInput = max(0.0, $sqrtInput);
-
-    // Segment volume (silinder utama)
-    $segment =
-        ($r * $r * acos($acosInput))
-        -
-        (($r - $t) * sqrt($sqrtInput));
-
-    // Volume silinder utama
-    $mainVolume = $segment * $length;
-
-    // Volume tambahan (head / end cap)
-    $volumeTambahan =
-        (pi() * $headLength * (3 * $r - $t) * $t * $t)
-        / (3 * $r);
-
-    // Total volume
-    $total = $mainVolume + $volumeTambahan;
-
-    return round($total, 2);
+        // Konversi persen ke liter
+        return round(($persen / 100) * $kapasitas, 2);
     }
 
     private function calculateHarian1($tinggi): float
@@ -328,11 +295,11 @@ class fixedCeklsit extends Controller
                 $Tangki_harian = $row->tangki_harian ?? 0;
 
                 if ($genset === 'genset1') {
-                    $row->liter_bulanan = round($this->calculateBulanan1($Tangki_bulanan)/1000,2);
-                    $row->liter_harian = round($this->calculateHarian1($Tangki_harian)/1000,2);
+                    $row->liter_bulanan = round($this->calculateBulanan1($Tangki_bulanan) / 1000, 2);
+                    $row->liter_harian = round($this->calculateHarian1($Tangki_harian) / 1000, 2);
                 } else {
-                    $row->liter_bulanan = round($this->calculateBulanan2($Tangki_bulanan)/1000,2);
-                    $row->liter_harian = round($this->calculateHarian1($Tangki_harian)/1000,2);
+                    $row->liter_bulanan = round($this->calculateBulanan2($Tangki_bulanan));
+                    $row->liter_harian = round($this->calculateHarian2($Tangki_harian) / 1000, 2);
                 }
 
                 return $row;

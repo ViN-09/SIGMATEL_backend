@@ -79,6 +79,11 @@ class checklist extends Controller
         return round($V / 1000, 2);
     }
 
+    private function persenToLiterBulanan2($h){
+        $liter_bulanan = round(($h / 100) * 10000);
+        return $liter_bulanan;
+    }
+
     private function cmToLiterBulanan($h)
     {
         if ($h === null || !is_numeric($h)) {
@@ -140,6 +145,7 @@ class checklist extends Controller
             unset($genset2->hours_mater2);
 
             $genset2->liter_harian = $this->cmToLiterHarian($genset2->tangki_harian);
+            $genset2->liter_bulanan = $this->persenToLiterBulanan2($genset2->tanki_bulanan);
         }
 
         return [
