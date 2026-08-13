@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\ttc_teling_controllers;
+namespace App\Http\Controllers\ttc_paniki_controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
